@@ -1,6 +1,6 @@
 {
   "name": "mazey-wechat-launch-app",
-  "version": "2.3.4",
+  "version": "2.3.5",
   "description": "Launch App in WeChat/Weixin",
   "main": "lib/index.cjs.js",
   "module": "lib/index.esm.js",
@@ -18,7 +18,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/mazeyqian/mazey-wechat-launch-app.git"
+    "url": "git+https://github.com/chengchuu/mazey-wechat-launch-app.git"
   },
   "keywords": [
     "wechat",
@@ -36,13 +36,13 @@
   "author": {
     "name": "Cheng",
     "email": "mazeyqian@gmail.com",
-    "url": "https://github.com/mazeyqian"
+    "url": "https://github.com/chengchuu"
   },
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/mazeyqian/mazey-wechat-launch-app/issues"
+    "url": "https://github.com/chengchuu/mazey-wechat-launch-app/issues"
   },
-  "homepage": "https://github.com/mazeyqian/mazey-wechat-launch-app#readme",
+  "homepage": "https://github.com/chengchuu/mazey-wechat-launch-app#readme",
   "devDependencies": {
     "@babel/core": "^7.8.4",
     "@babel/plugin-proposal-class-properties": "^7.10.4",

@@ -7,7 +7,7 @@
 [npm-image]: https://img.shields.io/npm/v/mazey-wechat-launch-app
 [npm-url]: https://npmjs.org/package/mazey-wechat-launch-app
 [l-image]: https://img.shields.io/npm/l/mazey-wechat-launch-app
-[l-url]: https://github.com/mazeyqian/mazey-wechat-launch-app
+[l-url]: https://github.com/chengchuu/mazey-wechat-launch-app
 
 生成微信（WeChat/Weixin）跳转 App 所需要的按钮，经过灵活配置，可支持生成单/多个按钮。
 
@@ -171,4 +171,4 @@ npm run build
 
 ## License
 
-This software is released under the terms of the [MIT license](https://github.com/mazeyqian/mazey-wechat-launch-app/blob/main/LICENSE).
+This software is released under the terms of the [MIT license](https://github.com/chengchuu/mazey-wechat-launch-app/blob/main/LICENSE).
