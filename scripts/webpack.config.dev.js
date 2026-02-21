@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 /* eslint-disable no-undef */
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-const CleanWebpackPlugin = require('clean-webpack-plugin');
+const { CleanWebpackPlugin } = require("clean-webpack-plugin");
 const path = require('path');
 const _resolve = (_path) => path.resolve(__dirname, _path);
 
@@ -14,7 +14,9 @@ module.exports = {
     path: _resolve('../dist'),
   },
   devServer: {
-    contentBase: _resolve('../dist'),
+    static: {
+      directory: _resolve("../dist"),
+    },
   },
   module: {
     rules: [
@@ -32,7 +34,7 @@ module.exports = {
       inject: true,
       chunksSortMode: 'dependency',
     }),
-    new CleanWebpackPlugin([_resolve('../dist')]),
+    new CleanWebpackPlugin({ cleanOnceBeforeBuildPatterns: [ _resolve("../dist") ] }),
   ],
   resolve: {
     extensions: ['.tsx', '.ts', '.js'],
