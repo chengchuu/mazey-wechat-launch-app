@@ -75,8 +75,9 @@
     "src/**/*.ts",
     "typing.d.ts"
   ],
-  "typedocOptions": {
-    "entryPoints": ["./src"],
-    "out": "docs"
-  }
+  "exclude": [
+    "dist",
+    "lib",
+    "node_modules"
+  ]
 }

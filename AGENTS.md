@@ -26,12 +26,12 @@ explicitly asks.
 - `examples/index.ts`: Webpack development entry. It currently logs a development message and does
   not exercise the package runtime.
 - `examples/index.html`: HTML shell used by the Webpack development server.
-- `scripts/rollup.config.js`: production package build for CommonJS, ESM, browser IIFE, and
+- `scripts/rollup.config.mjs`: production package build for CommonJS, ESM, browser IIFE, and
   declarations.
 - `scripts/webpack.config.dev.js`: local example build and development-server configuration.
 - `scripts/release.js`: delegates Git release work to `mazey/scripts/git-helper.js` on `main`.
-- `scripts/env.sh`: selects Node.js `14.21.3` through `nvm`.
-- `.github/workflows/test.yml`: pull-request build and test job on Node.js 14.
+- `scripts/env.sh` and `.nvmrc`: select Node.js 22 through `nvm`.
+- `.github/workflows/test.yml`: pull-request verification job on Node.js 22.
 - `.github/workflows/publish.yml`: build, test, and npm publish workflow for every push to `main`.
 - `README.md`: installation, CDN, runtime API, WeChat prerequisites, and contributor commands.
 - `lib/` and `dist/`: ignored generated output. Never edit either directory by hand.
@@ -88,8 +88,8 @@ that mock the browser must create `window`, `document`, `location`, and `window.
   from an ancestor.
 - `mazey` provides logging, nonce generation, style injection, and query parsing; `jquery` handles
   DOM lookup and mutation; `js-sha1` signs the JS-SDK configuration string.
-- CJS and ESM builds leave `mazey`, `jquery`, and `js-sha1` external for npm consumers. The browser
-  IIFE resolves and bundles them.
+- CJS and ESM builds leave `mazey`, `jquery`, `js-sha1`, and injected `core-js` modules external for
+  npm consumers. The browser IIFE resolves and bundles them.
 - The runtime writes its integration surface to `window.LAUNCH_APP_*` and writes generated tags,
   classes, styles, and the optional fallback mask into the host document.
 
@@ -105,31 +105,34 @@ instances needs focused regression tests and an explicit compatibility decision.
   source-map emission to `lib`, plus local resolution for `mazey` and `tslib` types.
 - `.babelrc`: browser targets, TypeScript parsing, ES5-compatible transformation, usage-based
   Core-JS injection, and Babel runtime helpers.
-- `.eslintrc` and `.eslintignore`: TypeScript lint rules and generated-directory exclusions.
+- `eslint.config.mjs`: flat TypeScript lint configuration and generated-directory exclusions.
 - `.prettierrc`, `.prettierignore`, and `.editorconfig`: formatting, whitespace, and line-ending
   rules.
-- `.lintstagedrc`, `commitlint.config.js`, and the `husky` block in `package.json`: staged TypeScript
-  formatting/linting and Conventional Commit checks.
-- `.npmignore`: excludes source, examples, tests, scripts, configuration, and lockfiles from the
-  published package. Check `npm pack --dry-run` when changing package contents.
-- `.gitignore`: excludes dependencies, `lib`, `dist`, local environment files, logs, and lockfiles.
-  This repository intentionally does not track `package-lock.json`.
+- `.lintstagedrc`, `commitlint.config.js`, and `.husky/`: staged TypeScript formatting/linting and
+  Conventional Commit checks.
+- `.npmignore`: excludes source, examples, tests, scripts, configuration, and the npm lockfile from
+  the published package. Check `npm pack --dry-run` when changing package contents.
+- `.gitignore`: excludes dependencies, `lib`, `dist`, local environment files, and logs.
+- `package-lock.json`: npm v10 lockfile committed for reproducible Node.js 22 installs.
 - `.npmrc`: uses the public npm registry.
 
 ## Build And Development Pipeline
 
-Use Node.js `14.21.3`, matching `scripts/env.sh`, the README, and both GitHub workflows. Install with
-`npm i`; no lockfile is committed.
+Use Node.js 22.15.0 or later in the Node.js 22 release line and npm 10 or later, matching `.nvmrc`,
+`scripts/env.sh`, `package.json`, the README, and both GitHub workflows. Install the committed
+dependency graph with `npm ci`.
 
 ```bash
 npm run dev
+npm run typecheck
+npm run lint
 npm run build
 npm run test
 npm run preview
 npm run lint:fix
 ```
 
-- `npm run dev` runs Webpack Dev Server, compiles `examples/index.ts` through `ts-loader`, generates
+- `npm run dev` runs `webpack serve`, compiles `examples/index.ts` through `ts-loader`, generates
   `dist/index.html`, and opens the local page. `dist` is disposable output.
 - `npm run build` runs Rollup. The first target removes `lib`, compiles `src/index.ts`, externalizes
   runtime dependencies, and emits CJS/ESM files plus declarations. The second target resolves
@@ -137,15 +140,14 @@ npm run lint:fix
   so validate all output formats when changing build configuration.
 - `npm run test` runs Jest against `lib/index.esm`; it is not a source-only test. Run the build first
   after source changes.
-- `npm run preview` is the normal local verification sequence: build, then test.
-- `npm run lint:fix` edits `src/index.ts` in place. Review its diff; use it only when source changes
-  require formatting or lint fixes.
+- `npm run typecheck` checks the TypeScript program without emitting output.
+- `npm run lint` checks the package source, ambient declarations, JavaScript build and release
+  configuration, and tests without modifying them.
+- `npm run preview` is the normal local verification sequence: typecheck, lint, build, then test.
+- `npm run lint:fix` fixes supported lint findings in the same files. Review its diff and use it only
+  when the affected files require formatting or lint fixes.
 - `npm run release` first runs the preview pipeline, then invokes a Git/tag release helper. It is a
   state-changing maintainer command, not a validation command.
-
-The `typedocOptions` block in `tsconfig.json` points at `src` and `docs`, but `package.json` has no
-TypeDoc script in the current pipeline. Do not claim documentation generation was validated unless
-you run an explicit, compatible command.
 
 ## Change And Test Guidelines
 
@@ -171,12 +173,12 @@ git diff --check
 ```
 
 Add `npm pack --dry-run` for package metadata, output, or publishing-boundary changes. Report any
-checks that could not run, especially when Node 14 or dependencies are unavailable.
+checks that could not run, especially when Node.js 22 or dependencies are unavailable.
 
 ## CI And Release Safety
 
-Pull requests to `main` install dependencies, build, and test on Node.js 14. Pushes to `main` run a
-separate workflow that installs dependencies, runs the mutating lint command, builds, tests, and
-publishes to npm with `NPM_TOKEN`. Treat changes to `main`, `.github/workflows/publish.yml`, package
-identity, versioning, and release scripts as release-sensitive. Never push or publish as an
-implicit part of routine contributor work.
+Pull requests to `main` run the full preview pipeline on Node.js 22. Pushes to `main` run a separate
+workflow that performs a clean install, lints without mutation, builds, tests, and publishes to npm
+with `NPM_TOKEN`. Treat changes to `main`, `.github/workflows/publish.yml`, package identity,
+versioning, and release scripts as release-sensitive. Never push or publish as an implicit part of
+routine contributor work.

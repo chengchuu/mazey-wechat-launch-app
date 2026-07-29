@@ -147,14 +147,15 @@ app.start();
 
 | Dependencies | Version  |
 |------------|----------|
-| Node.js    | v14.21.3 |
+| Node.js    | v22.15.0 or later in v22.x |
+| npm        | v10 or later |
 
 ### Scripts
 
 Install Dependencies:
 
 ```bash
-npm i
+npm ci
 ```
 
 Development:
@@ -167,6 +168,18 @@ Build:
 
 ```bash
 npm run build
+```
+
+Lint:
+
+```bash
+npm run lint
+```
+
+Test:
+
+```bash
+npm test
 ```
 
 ## License
