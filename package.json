@@ -1,16 +1,23 @@
 {
   "name": "mazey-wechat-launch-app",
-  "version": "2.4.0",
+  "version": "2.4.1",
+  "packageManager": "pnpm@10.26.2",
   "description": "Launch App in WeChat/Weixin",
   "main": "lib/index.cjs.js",
   "module": "lib/index.esm.js",
   "typings": "lib/index.d.ts",
+  "files": [
+    "lib",
+    "README.md",
+    "LICENSE"
+  ],
   "mainEntryPointFilePath": "lib/index.d.ts",
   "unpkg": "lib/launch-app.min.js",
   "jsdelivr": "lib/launch-app.min.js",
   "engines": {
     "node": ">=22.15.0 <23",
-    "npm": ">=10"
+    "npm": ">=10",
+    "pnpm": ">=10"
   },
   "jest": {
     "testPathIgnorePatterns": [
@@ -19,14 +26,22 @@
     ]
   },
   "scripts": {
-    "dev": "webpack serve --config ./scripts/webpack.config.dev.js --open",
+    "dev": "webpack serve --config ./scripts/webpack.config.dev.js",
     "build": "rollup --config ./scripts/rollup.config.mjs",
+    "build:dev": "webpack --config ./scripts/webpack.config.dev.js",
+    "build:site": "cross-env GITHUB_PAGES=true webpack --mode production --config ./scripts/webpack.config.dev.js",
     "test": "jest --runInBand",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint src/index.ts typing.d.ts eslint.config.mjs commitlint.config.js scripts test",
-    "lint:fix": "npm run lint -- --fix",
-    "preview": "npm run typecheck && npm run lint && npm run build && npm run test",
-    "release": "npm run preview && cross-env SCRIPTS_NPM_PACKAGE_VERSION=$npm_package_version node ./scripts/release.js",
+    "lint": "eslint src examples site typing.d.ts eslint.config.mjs commitlint.config.js project.config.js scripts test",
+    "lint:fix": "pnpm run lint -- --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "docs": "typedoc --out .pages-api --entryPoints src/index.ts --readme README.md --excludeProtected --excludePrivate --excludeInternal --hideGenerator && pnpm run build:site && node scripts/build-pages.mjs && pnpm run seo:validate && pnpm run pwa:validate",
+    "seo:validate": "node scripts/validate-seo.mjs",
+    "pwa:validate": "node scripts/validate-pwa.mjs",
+    "pwa:preview": "pnpm run docs && node scripts/preview-pages.mjs",
+    "preview": "pnpm run typecheck && pnpm run lint && pnpm run build && pnpm run test && pnpm run docs",
+    "release": "pnpm run preview && cross-env SCRIPTS_NPM_PACKAGE_VERSION=$npm_package_version node ./scripts/release.js",
     "prepare": "node ./scripts/prepare.mjs"
   },
   "repository": {
@@ -55,7 +70,7 @@
   "bugs": {
     "url": "https://github.com/chengchuu/mazey-wechat-launch-app/issues"
   },
-  "homepage": "https://github.com/chengchuu/mazey-wechat-launch-app#readme",
+  "homepage": "https://chengchuu.github.io/mazey-wechat-launch-app/",
   "devDependencies": {
     "@babel/core": "^7.29.7",
     "@babel/preset-env": "^7.29.7",
@@ -69,18 +84,23 @@
     "@rollup/plugin-terser": "^1.0.0",
     "@types/jquery": "^3.5.17",
     "@types/js-sha1": "^0.6.0",
+    "bootstrap": "5.3.8",
     "cross-env": "^10.1.0",
+    "css-loader": "^7.1.4",
     "eslint": "^10.6.0",
     "globals": "^17.7.0",
     "html-webpack-plugin": "^5.6.7",
     "husky": "^9.1.7",
     "jest": "^30.4.2",
-    "lint-staged": "^17.0.8",
+    "jest-environment-jsdom": "^30.4.1",
+    "lint-staged": "^16.4.0",
+    "mini-css-extract-plugin": "^2.10.2",
     "prettier": "^3.9.5",
     "rollup": "^4.62.2",
     "rollup-plugin-typescript2": "^0.37.0",
     "ts-loader": "^9.6.2",
     "tslib": "^2.8.1",
+    "typedoc": "^0.28.20",
     "typescript": "5.9.3",
     "typescript-eslint": "^8.63.0",
     "webpack": "^5.108.4",
@@ -91,6 +111,6 @@
     "core-js": "^3.49.0",
     "jquery": "^3.7.1",
     "js-sha1": "^0.6.0",
-    "mazey": "^4.7.12"
+    "mazey": "^5.6.1"
   }
 }

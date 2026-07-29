@@ -9,8 +9,8 @@ Guidance for contributors and automated coding agents working in this repository
 required signature, renders launch controls, exposes lifecycle helpers, and handles launch errors
 or fallback navigation.
 
-Keep changes focused on this checkout. The parent `/Users/cheng/web/npm` directory contains
-independent repositories and is not a monorepo. Run Git and npm commands from this repository, and
+Keep changes focused on this checkout. The parent `/Users/mazey/Web/web/npm` directory contains
+independent repositories and is not a monorepo. Run Git and pnpm commands from this repository, and
 preserve unrelated uncommitted work. Do not stage, commit, push, release, or publish unless the user
 explicitly asks.
 
@@ -21,20 +21,27 @@ explicitly asks.
   public lifecycle methods.
 - `typing.d.ts`: ambient browser and public return-value declarations used by the TypeScript build.
   Keep these declarations synchronized with public methods and `window.LAUNCH_APP_*` globals.
-- `test/type.test.js`: Jest smoke test for the generated ESM entry. It imports from `lib`, so build
-  before running the test in a fresh checkout.
-- `examples/index.ts`: Webpack development entry. It currently logs a development message and does
-  not exercise the package runtime.
-- `examples/index.html`: HTML shell used by the Webpack development server.
+- `test/type.test.js`: Jest smoke tests for generated package entries and declarations.
+- `test/site.test.js`: regression tests for project identity, Playground validation, the mock
+  WeChat SDK, and storage-failure theme behavior.
+- `examples/`: crawlable Playground source that exercises the public root API with a local WeChat
+  JS-SDK mock.
+- `site/`: shared Bootstrap, navigation, theme, PWA, API enhancement, homepage, and service-worker
+  sources.
+- `project.config.js`: central package, repository, website, SEO, theme, and PWA identity.
 - `scripts/rollup.config.mjs`: production package build for CommonJS, ESM, browser IIFE, and
   declarations.
-- `scripts/webpack.config.dev.js`: local example build and development-server configuration.
+- `scripts/webpack.config.dev.js`: website, Playground, and API enhancement build configuration.
+- `scripts/build-pages.mjs`: deterministic Pages assembly and TypeDoc transformation.
+- `scripts/validate-seo.mjs` and `scripts/validate-pwa.mjs`: final-artifact validation.
 - `scripts/release.js`: delegates Git release work to `mazey/scripts/git-helper.js` on `main`.
 - `scripts/env.sh` and `.nvmrc`: select Node.js 22 through `nvm`.
-- `.github/workflows/test.yml`: pull-request verification job on Node.js 22.
+- `.github/workflows/test.yml`: pull-request verification job on Node.js 22 and pnpm 10.
+- `.github/workflows/pages.yml`: validated GitHub Pages build and deployment.
 - `.github/workflows/publish.yml`: build, test, and npm publish workflow for every push to `main`.
 - `README.md`: installation, CDN, runtime API, WeChat prerequisites, and contributor commands.
-- `lib/` and `dist/`: ignored generated output. Never edit either directory by hand.
+- `lib/`, `dist-dev/`, `docs/`, `.pages-api/`, and `coverage/`: ignored generated output. Never
+  edit these directories by hand.
 
 ## Entry Points And Public Outputs
 
@@ -110,43 +117,46 @@ instances needs focused regression tests and an explicit compatibility decision.
   rules.
 - `.lintstagedrc`, `commitlint.config.js`, and `.husky/`: staged TypeScript formatting/linting and
   Conventional Commit checks.
-- `.npmignore`: excludes source, examples, tests, scripts, configuration, and the npm lockfile from
-  the published package. Check `npm pack --dry-run` when changing package contents.
-- `.gitignore`: excludes dependencies, `lib`, `dist`, local environment files, and logs.
-- `package-lock.json`: npm v10 lockfile committed for reproducible Node.js 22 installs.
+- `package.json` uses an explicit `files` allowlist for published package contents. Check
+  `npm pack --dry-run` when changing package contents.
+- `.gitignore`: excludes dependencies, generated package/site output, local environment files, and
+  logs.
+- `pnpm-lock.yaml`: pnpm 10 lockfile committed for reproducible Node.js 22 installs.
 - `.npmrc`: uses the public npm registry.
 
 ## Build And Development Pipeline
 
-Use Node.js 22.15.0 or later in the Node.js 22 release line and npm 10 or later, matching `.nvmrc`,
-`scripts/env.sh`, `package.json`, the README, and both GitHub workflows. Install the committed
-dependency graph with `npm ci`.
+Use Node.js 22.15.0 or later in the Node.js 22 release line and pnpm 10 or later, matching `.nvmrc`,
+`scripts/env.sh`, `package.json`, the README, and GitHub workflows. Install the committed dependency
+graph with `pnpm install --frozen-lockfile`.
 
 ```bash
-npm run dev
-npm run typecheck
-npm run lint
-npm run build
-npm run test
-npm run preview
-npm run lint:fix
+pnpm run dev
+pnpm run typecheck
+pnpm run lint
+pnpm run build
+pnpm run test
+pnpm run docs
+pnpm run preview
+pnpm run lint:fix
 ```
 
-- `npm run dev` runs `webpack serve`, compiles `examples/index.ts` through `ts-loader`, generates
-  `dist/index.html`, and opens the local page. `dist` is disposable output.
-- `npm run build` runs Rollup. The first target removes `lib`, compiles `src/index.ts`, externalizes
+- `pnpm run dev` runs the Webpack development server for the homepage and Playground.
+- `pnpm run build` runs Rollup. The first target removes `lib`, compiles `src/index.ts`, externalizes
   runtime dependencies, and emits CJS/ESM files plus declarations. The second target resolves
   dependencies and emits the minified browser IIFE. Rollup, TypeScript, and Babel all participate,
   so validate all output formats when changing build configuration.
-- `npm run test` runs Jest against `lib/index.esm`; it is not a source-only test. Run the build first
+- `pnpm run test` runs Jest against `lib/index.esm` and website source. Run the build first
   after source changes.
-- `npm run typecheck` checks the TypeScript program without emitting output.
-- `npm run lint` checks the package source, ambient declarations, JavaScript build and release
-  configuration, and tests without modifying them.
-- `npm run preview` is the normal local verification sequence: typecheck, lint, build, then test.
-- `npm run lint:fix` fixes supported lint findings in the same files. Review its diff and use it only
+- `pnpm run docs` builds TypeDoc and the Webpack site, replaces `docs/`, enhances API pages,
+  generates SEO/PWA assets, and validates the final artifact.
+- `pnpm run typecheck` checks the package TypeScript program without emitting output.
+- `pnpm run lint` checks package and website source, declarations, build scripts, and tests.
+- `pnpm run preview` is the normal local verification sequence: typecheck, lint, package build,
+  tests, and the complete Pages build.
+- `pnpm run lint:fix` fixes supported lint findings in the same files. Review its diff and use it only
   when the affected files require formatting or lint fixes.
-- `npm run release` first runs the preview pipeline, then invokes a Git/tag release helper. It is a
+- `pnpm run release` first runs the preview pipeline, then invokes a Git/tag release helper. It is a
   state-changing maintainer command, not a validation command.
 
 ## Change And Test Guidelines
@@ -161,14 +171,14 @@ npm run lint:fix
   overrides unless the requested behavior changes them.
 - Avoid new dependencies without checking both output strategies: npm builds externalize runtime
   dependencies, while the IIFE bundles them.
-- Do not hand-edit `lib` or `dist`. Rebuild from source.
+- Do not hand-edit `lib`, `dist-dev`, `docs`, `.pages-api`, or `coverage`. Rebuild from source.
 - Keep tests deterministic; do not require a live WeChat session, real ticket, network access, or
   navigation to validate package logic.
 
 For a normal source change, run:
 
 ```bash
-npm run preview
+pnpm run preview
 git diff --check
 ```
 

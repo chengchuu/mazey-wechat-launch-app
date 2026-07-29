@@ -4,7 +4,15 @@ import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
   {
-    ignores: ['dist/**', 'lib/**', 'node_modules/**'],
+    ignores: [
+      '.pages-api/**',
+      'coverage/**',
+      'dist/**',
+      'dist-dev/**',
+      'docs/**',
+      'lib/**',
+      'node_modules/**',
+    ],
   },
   js.configs.recommended,
   ...tseslint.configs.recommended.map((config) => ({
@@ -12,7 +20,12 @@ export default tseslint.config(
     files: ['**/*.{ts,tsx}'],
   })),
   {
-    files: ['src/**/*.{ts,tsx}', 'typing.d.ts'],
+    files: [
+      'examples/**/*.{ts,tsx}',
+      'site/**/*.{ts,tsx}',
+      'src/**/*.{ts,tsx}',
+      'typing.d.ts',
+    ],
     languageOptions: {
       globals: globals.browser,
     },
@@ -27,6 +40,7 @@ export default tseslint.config(
     files: ['test/**/*.{js,ts,tsx}'],
     languageOptions: {
       globals: {
+        ...globals.browser,
         ...globals.jest,
         ...globals.node,
       },
