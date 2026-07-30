@@ -10,9 +10,9 @@ required signature, renders launch controls, exposes lifecycle helpers, and hand
 or fallback navigation.
 
 Keep changes focused on this checkout. The parent `/Users/mazey/Web/web/npm` directory contains
-independent repositories and is not a monorepo. Run Git and pnpm commands from this repository, and
-preserve unrelated uncommitted work. Do not stage, commit, push, release, or publish unless the user
-explicitly asks.
+independent repositories and is not a monorepo. Run Git and package-manager commands from this
+repository, and preserve unrelated uncommitted work. Do not stage, commit, push, release, or publish
+unless the user explicitly asks.
 
 ## Repository Map
 
@@ -126,37 +126,37 @@ instances needs focused regression tests and an explicit compatibility decision.
 
 ## Build And Development Pipeline
 
-Use Node.js 22.15.0 or later in the Node.js 22 release line and pnpm 10 or later, matching `.nvmrc`,
-`scripts/env.sh`, `package.json`, the README, and GitHub workflows. Install the committed dependency
-graph with `pnpm install --frozen-lockfile`.
+Use Node.js 22.15.0 or later in the Node.js 22 release line, matching `.nvmrc`, `scripts/env.sh`,
+`package.json`, and the README. Contributors may use npm, pnpm, or Yarn. CI uses pnpm 10 and the
+committed `pnpm-lock.yaml`; do not commit locally generated `package-lock.json` or `yarn.lock` files.
 
 ```bash
-pnpm run dev
-pnpm run typecheck
-pnpm run lint
-pnpm run build
-pnpm run test
-pnpm run docs
-pnpm run preview
-pnpm run lint:fix
+npm run dev
+npm run typecheck
+npm run lint
+npm run build
+npm run test
+npm run docs
+npm run preview
+npm run lint:fix
 ```
 
-- `pnpm run dev` runs the Webpack development server for the homepage and Playground.
-- `pnpm run build` runs Rollup. The first target removes `lib`, compiles `src/index.ts`, externalizes
+- `npm run dev` runs the Webpack development server for the homepage and Playground.
+- `npm run build` runs Rollup. The first target removes `lib`, compiles `src/index.ts`, externalizes
   runtime dependencies, and emits CJS/ESM files plus declarations. The second target resolves
   dependencies and emits the minified browser IIFE. Rollup, TypeScript, and Babel all participate,
   so validate all output formats when changing build configuration.
-- `pnpm run test` runs Jest against `lib/index.esm` and website source. Run the build first
+- `npm run test` runs Jest against `lib/index.esm` and website source. Run the build first
   after source changes.
-- `pnpm run docs` builds TypeDoc and the Webpack site, replaces `docs/`, enhances API pages,
+- `npm run docs` builds TypeDoc and the Webpack site, replaces `docs/`, enhances API pages,
   generates SEO/PWA assets, and validates the final artifact.
-- `pnpm run typecheck` checks the package TypeScript program without emitting output.
-- `pnpm run lint` checks package and website source, declarations, build scripts, and tests.
-- `pnpm run preview` is the normal local verification sequence: typecheck, lint, package build,
+- `npm run typecheck` checks the package TypeScript program without emitting output.
+- `npm run lint` checks package and website source, declarations, build scripts, and tests.
+- `npm run preview` is the normal local verification sequence: typecheck, lint, package build,
   tests, and the complete Pages build.
-- `pnpm run lint:fix` fixes supported lint findings in the same files. Review its diff and use it only
+- `npm run lint:fix` fixes supported lint findings in the same files. Review its diff and use it only
   when the affected files require formatting or lint fixes.
-- `pnpm run release` first runs the preview pipeline, then invokes a Git/tag release helper. It is a
+- `npm run release` first runs the preview pipeline, then invokes a Git/tag release helper. It is a
   state-changing maintainer command, not a validation command.
 
 ## Change And Test Guidelines
@@ -178,7 +178,7 @@ pnpm run lint:fix
 For a normal source change, run:
 
 ```bash
-pnpm run preview
+npm run preview
 git diff --check
 ```
 

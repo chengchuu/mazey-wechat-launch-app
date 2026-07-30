@@ -1,7 +1,6 @@
 {
   "name": "mazey-wechat-launch-app",
-  "version": "2.4.2",
-  "packageManager": "pnpm@10.26.2",
+  "version": "2.4.3",
   "description": "Launch App in WeChat/Weixin",
   "main": "lib/index.cjs.js",
   "module": "lib/index.esm.js",
@@ -15,9 +14,7 @@
   "unpkg": "lib/launch-app.min.js",
   "jsdelivr": "lib/launch-app.min.js",
   "engines": {
-    "node": ">=22.15.0 <23",
-    "npm": ">=10",
-    "pnpm": ">=10"
+    "node": ">=22.15.0 <23"
   },
   "jest": {
     "testPathIgnorePatterns": [
@@ -33,15 +30,15 @@
     "test": "jest --runInBand",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src examples site typing.d.ts eslint.config.mjs commitlint.config.js project.config.js scripts test",
-    "lint:fix": "pnpm run lint -- --fix",
+    "lint:fix": "npm run lint -- --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "docs": "typedoc --out .pages-api --entryPoints src/index.ts --readme README.md --excludeProtected --excludePrivate --excludeInternal --hideGenerator && pnpm run build:site && node scripts/build-pages.mjs && pnpm run seo:validate && pnpm run pwa:validate",
+    "docs": "typedoc --out .pages-api --entryPoints src/index.ts --readme README.md --excludeProtected --excludePrivate --excludeInternal --hideGenerator && npm run build:site && node scripts/build-pages.mjs && npm run seo:validate && npm run pwa:validate",
     "seo:validate": "node scripts/validate-seo.mjs",
     "pwa:validate": "node scripts/validate-pwa.mjs",
-    "pwa:preview": "pnpm run docs && node scripts/preview-pages.mjs",
-    "preview": "pnpm run typecheck && pnpm run lint && pnpm run build && pnpm run test && pnpm run docs",
-    "release": "pnpm run preview && cross-env SCRIPTS_NPM_PACKAGE_VERSION=$npm_package_version node ./scripts/release.js",
+    "pwa:preview": "npm run docs && node scripts/preview-pages.mjs",
+    "preview": "npm run typecheck && npm run lint && npm run build && npm run test && npm run docs",
+    "release": "npm run preview && cross-env SCRIPTS_NPM_PACKAGE_VERSION=$npm_package_version node ./scripts/release.js",
     "prepare": "node ./scripts/prepare.mjs"
   },
   "repository": {

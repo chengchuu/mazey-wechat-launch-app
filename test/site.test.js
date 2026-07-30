@@ -5,6 +5,9 @@
 import { createMockWx, validatePlaygroundValues } from '../examples/index';
 import { initializeThemeControls } from '../site/theme';
 
+const fs = require('node:fs');
+const path = require('node:path');
+
 let media;
 
 beforeEach(() => {
@@ -62,6 +65,33 @@ test('central config derives stable package and Pages identity', () => {
   expect(project.site.pages.playground.url).toBe(
     'https://chengchuu.github.io/mazey-wechat-launch-app/playground/'
   );
+});
+
+test('shared navigation keeps the theme control on one line', () => {
+  const css = fs.readFileSync(
+    path.resolve(__dirname, '../site/site.css'),
+    'utf8'
+  );
+  const themeControlRule = css.match(/\.theme-control\s*\{([^}]*)\}/)?.[1];
+
+  expect(themeControlRule).toMatch(/flex:\s*0 0 auto;/);
+  expect(themeControlRule).toMatch(/white-space:\s*nowrap;/);
+});
+
+test('shared layout keeps the footer at the bottom of short pages', () => {
+  const css = fs.readFileSync(
+    path.resolve(__dirname, '../site/site.css'),
+    'utf8'
+  );
+  const bodyRule = [...css.matchAll(/body\s*\{([^}]*)\}/g)]
+    .map((match) => match[1])
+    .find((rule) => /min-height:\s*100vh;/.test(rule));
+  const mainRule = css.match(/body\s*>\s*main\s*\{([^}]*)\}/)?.[1];
+
+  expect(bodyRule).toMatch(/display:\s*flex;/);
+  expect(bodyRule).toMatch(/flex-direction:\s*column;/);
+  expect(bodyRule).toMatch(/min-height:\s*100vh;/);
+  expect(mainRule).toMatch(/flex:\s*1 0 auto;/);
 });
 
 test('theme selection remains active when storage rejects writes', () => {
