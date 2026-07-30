@@ -157,44 +157,48 @@ app.start({});
 | Dependencies | Version                    |
 | ------------ | -------------------------- |
 | Node.js      | v22.15.0 or later in v22.x |
-| pnpm         | v10 or later               |
+
+Use npm, pnpm, or Yarn to install dependencies and run scripts. CI uses the committed pnpm
+lockfile for reproducible builds.
 
 ### Scripts
 
 Install Dependencies:
 
 ```bash
-pnpm install --frozen-lockfile
+npm install
+# or: pnpm install
+# or: yarn install
 ```
 
 Development:
 
 ```bash
-pnpm run dev
+npm run dev
 ```
 
 Build:
 
 ```bash
-pnpm run build
+npm run build
 ```
 
 Lint:
 
 ```bash
-pnpm run lint
+npm run lint
 ```
 
 Test:
 
 ```bash
-pnpm test
+npm test
 ```
 
 Build and validate the GitHub Pages artifact:
 
 ```bash
-pnpm run docs
+npm run docs
 ```
 
 ## License

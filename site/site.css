@@ -54,9 +54,16 @@ html {
 }
 
 body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
   color: var(--launch-text);
   background: var(--launch-bg);
   line-height: 1.65;
+}
+
+body > main {
+  flex: 1 0 auto;
 }
 
 a {
@@ -127,11 +134,13 @@ a {
 
 .theme-control {
   display: flex;
+  flex: 0 0 auto;
   align-items: center;
   gap: 0.5rem;
   color: var(--launch-muted);
   font-size: 0.875rem;
   font-weight: 600;
+  white-space: nowrap;
 }
 
 .hero {
