@@ -18,9 +18,9 @@ module.exports = {
         'perf',
         'revert',
         'test',
-        'release'
-      ]
+        'release',
+      ],
     ],
-    'subject-case': [0, 'never', ['lower-case']]
-  }
+    'subject-case': [0, 'never', ['lower-case']],
+  },
 };

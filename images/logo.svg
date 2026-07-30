@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title">
+  <title id="title">mazey-wechat-launch-app</title>
+  <rect width="64" height="64" rx="15" fill="#087f5b"/>
+  <path d="M14 18h27a9 9 0 0 1 9 9v5a9 9 0 0 1-9 9H29l-9 7 2-7h-8a9 9 0 0 1-9-9v-5a9 9 0 0 1 9-9Z" fill="#fff"/>
+  <path d="M30 26h12m-5-5 5 5-5 5" fill="none" stroke="#087f5b" stroke-linecap="round" stroke-linejoin="round" stroke-width="3"/>
+</svg>

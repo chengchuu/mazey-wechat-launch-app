@@ -1,6 +1,9 @@
 # Output folders
 node_modules/
 dist/
+dist-dev/
+docs/
+.pages-api/
 lib/
 test/unit/coverage
 test/e2e/reports
@@ -30,9 +33,6 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 selenium-debug.log*
-
-# Lock files
-package-lock.json
 
 # Secret folders&files
 *.secret/

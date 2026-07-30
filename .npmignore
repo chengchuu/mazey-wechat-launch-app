@@ -13,6 +13,8 @@ scripts/
 # .
 .idea
 .vscode
+.husky
+.nvmrc
 .editorconfig
 .eslintignore
 .lintstagedrc
@@ -21,6 +23,7 @@ scripts/
 .eslintrc.js
 .babelrc
 .eslintrc
+eslint.config.mjs
 
 # *
 *.yml
@@ -40,3 +43,4 @@ webpack.config.js
 jsdoc.config.json
 tsconfig.json
 typing.d.ts
+AGENTS.md
