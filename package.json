@@ -1,6 +1,6 @@
 {
   "name": "mazey-wechat-launch-app",
-  "version": "2.4.3",
+  "version": "2.4.4",
   "description": "Launch App in WeChat/Weixin",
   "main": "lib/index.cjs.js",
   "module": "lib/index.esm.js",
@@ -13,9 +13,6 @@
   "mainEntryPointFilePath": "lib/index.d.ts",
   "unpkg": "lib/launch-app.min.js",
   "jsdelivr": "lib/launch-app.min.js",
-  "engines": {
-    "node": ">=22.15.0 <23"
-  },
   "jest": {
     "testPathIgnorePatterns": [
       "/dist/",
@@ -82,6 +79,7 @@
     "@types/jquery": "^3.5.17",
     "@types/js-sha1": "^0.6.0",
     "bootstrap": "5.3.8",
+    "bootstrap-icons": "^1.13.1",
     "cross-env": "^10.1.0",
     "css-loader": "^7.1.4",
     "eslint": "^10.6.0",
@@ -108,6 +106,6 @@
     "core-js": "^3.49.0",
     "jquery": "^3.7.1",
     "js-sha1": "^0.6.0",
-    "mazey": "^5.6.1"
+    "mazey": "^5.7.3"
   }
 }

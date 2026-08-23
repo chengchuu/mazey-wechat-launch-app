@@ -17,8 +17,8 @@ importers:
         specifier: ^0.6.0
         version: 0.6.0
       mazey:
-        specifier: ^5.6.1
-        version: 5.6.1
+        specifier: ^5.7.3
+        version: 5.7.3
     devDependencies:
       '@babel/core':
         specifier: ^7.29.7
@@ -59,6 +59,9 @@ importers:
       bootstrap:
         specifier: 5.3.8
         version: 5.3.8(@popperjs/core@2.11.8)
+      bootstrap-icons:
+        specifier: ^1.13.1
+        version: 1.13.1
       cross-env:
         specifier: ^10.1.0
         version: 10.1.0
@@ -3073,6 +3076,12 @@ packages:
         integrity: sha512-JZOSA7Mo9sNGB8+UjSgzdLtokWAky1zbztM3WRLCbZ70/3cTANmQmOdR7y2g+J0e2WXywy1yS468tY+IruqEww==,
       }
 
+  bootstrap-icons@1.13.1:
+    resolution:
+      {
+        integrity: sha512-ijombt4v6bv5CLeXvRWKy7CuM3TRTuPEuGaGKvTV5cz65rQSY8RQ2JcHt6b90cBBAC7s8fsf2EkQDldzCoXUjw==,
+      }
+
   bootstrap@5.3.8:
     resolution:
       {
@@ -5147,10 +5156,10 @@ packages:
       }
     engines: { node: '>= 0.4' }
 
-  mazey@5.6.1:
+  mazey@5.7.3:
     resolution:
       {
-        integrity: sha512-SUdUhwznqNdjiHrX6ADTr4MlTzhqFwYcCtTjtefnkM6NiD67U+8F4nDLlnxTF1El9m0toOJzziQApaxKrpuZMw==,
+        integrity: sha512-SdBLOtT+ml+2ZlywDr8IDsUVLv23pkecO7ghvEp37PuiClsk86PgnD6D/uIQEt50aiMgek+GPD9voPttto3DOQ==,
       }
 
   mdurl@2.1.0:
@@ -9108,6 +9117,8 @@ snapshots:
 
   boolbase@1.0.0: {}
 
+  bootstrap-icons@1.13.1: {}
+
   bootstrap@5.3.8(@popperjs/core@2.11.8):
     dependencies:
       '@popperjs/core': 2.11.8
@@ -10486,7 +10497,7 @@ snapshots:
 
   math-intrinsics@1.1.0: {}
 
-  mazey@5.6.1: {}
+  mazey@5.7.3: {}
 
   mdurl@2.1.0: {}
 

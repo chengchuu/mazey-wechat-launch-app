@@ -163,43 +163,13 @@ lockfile for reproducible builds.
 
 ### Scripts
 
-Install Dependencies:
+Run `npm install`, then use:
 
-```bash
-npm install
-# or: pnpm install
-# or: yarn install
-```
-
-Development:
-
-```bash
-npm run dev
-```
-
-Build:
-
-```bash
-npm run build
-```
-
-Lint:
-
-```bash
-npm run lint
-```
-
-Test:
-
-```bash
-npm test
-```
-
-Build and validate the GitHub Pages artifact:
-
-```bash
-npm run docs
-```
+- `npm run dev` to start the development server.
+- `npm run build` to build the package.
+- `npm run lint` to lint the source.
+- `npm test` to run the tests.
+- `npm run docs` to build and validate the GitHub Pages artifact.
 
 ## License
 
