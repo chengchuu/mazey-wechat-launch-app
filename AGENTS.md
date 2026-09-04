@@ -36,7 +36,6 @@ unless the user explicitly asks.
 - `scripts/validate-seo.mjs` and `scripts/validate-pwa.mjs`: final-artifact validation.
 - `scripts/prepare.mjs`: installs Husky hooks outside production installs.
 - `scripts/release.js`: delegates Git release work to `mazey/scripts/git-helper.js` on `main`.
-- `scripts/env.sh` and `.nvmrc`: select Node.js 22 through `nvm`.
 - `.github/workflows/test.yml`: pull-request verification job on Node.js 22 and pnpm 10.
 - `.github/workflows/pages.yml`: validated GitHub Pages build and deployment.
 - `.github/workflows/publish.yml`: lint, build, test, and npm publication for pushes to
@@ -132,11 +131,10 @@ instances needs focused regression tests and an explicit compatibility decision.
 
 ## Build And Development Pipeline
 
-The README requires Node.js 22.15.0 or later in the Node.js 22 release line. `.nvmrc`,
-`scripts/env.sh`, and CI select Node.js 22. The published package does not declare an `engines`
-restriction because its runtime is the browser. Contributors may use npm, pnpm, or Yarn. CI uses
-pnpm 10 and the committed `pnpm-lock.yaml`; do not commit locally generated `package-lock.json` or
-`yarn.lock` files.
+The README requires Node.js 22.15.0 or later in the Node.js 22 release line. CI selects Node.js 22.
+The published package does not declare an `engines` restriction because its runtime is the browser.
+Contributors may use npm, pnpm, or Yarn. CI uses pnpm 10 and the committed `pnpm-lock.yaml`; do not
+commit locally generated `package-lock.json` or `yarn.lock` files.
 
 ```bash
 npm run dev
