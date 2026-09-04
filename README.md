@@ -1,5 +1,3 @@
-<!-- omit from toc -->
-
 # mazey-wechat-launch-app
 
 [![NPM version][npm-image]][npm-url]
@@ -31,10 +29,8 @@
 
 ## Install
 
-使用 [npm](https://www.npmjs.com/package/mazey-wechat-launch-app) 安装 mazey-wechat-launch-app：
-
 ```bash
-npm install mazey-wechat-launch-app --save
+npm install mazey-wechat-launch-app
 ```
 
 ## Usage
