@@ -22,8 +22,9 @@ unless the user explicitly asks.
 - `typing.d.ts`: ambient browser and public return-value declarations used by the TypeScript build.
   Keep these declarations synchronized with public methods and `window.LAUNCH_APP_*` globals.
 - `test/type.test.js`: Jest smoke tests for generated package entries and declarations.
+- `test/share.test.js`: deterministic share API tests against the generated CommonJS entry.
 - `test/site.test.js`: regression tests for project identity, Playground validation, the mock
-  WeChat SDK, and storage-failure theme behavior.
+  WeChat SDK, theme behavior, and TypeDoc Pages transformation.
 - `examples/`: crawlable Playground source that exercises the public root API with a local WeChat
   JS-SDK mock.
 - `site/`: shared Bootstrap, navigation, theme, PWA, API enhancement, homepage, and service-worker
@@ -34,12 +35,14 @@ unless the user explicitly asks.
 - `scripts/webpack.config.dev.js`: website, Playground, and API enhancement build configuration.
 - `scripts/build-pages.mjs`: deterministic Pages assembly and TypeDoc transformation.
 - `scripts/validate-seo.mjs` and `scripts/validate-pwa.mjs`: final-artifact validation.
+- `scripts/prepare.mjs`: installs Husky hooks outside production installs.
 - `scripts/release.js`: delegates Git release work to `mazey/scripts/git-helper.js` on `main`.
-- `scripts/env.sh` and `.nvmrc`: select Node.js 22 through `nvm`.
 - `.github/workflows/test.yml`: pull-request verification job on Node.js 22 and pnpm 10.
 - `.github/workflows/pages.yml`: validated GitHub Pages build and deployment.
-- `.github/workflows/publish.yml`: build, test, and npm publish workflow for every push to `main`.
+- `.github/workflows/publish.yml`: lint, build, test, and npm publication for pushes to
+  `release/v*`.
 - `README.md`: installation, CDN, runtime API, WeChat prerequisites, and contributor commands.
+- `images/`: maintained logo, social image, and PWA icon sources copied into the Pages artifact.
 - `lib/`, `dist-dev/`, `docs/`, `.pages-api/`, and `coverage/`: ignored generated output. Never
   edit these directories by hand.
 
@@ -63,14 +66,17 @@ the build config, package metadata, README examples, declarations, and tests tog
 2. Calling `LAUNCH_APP(options)` merges the supplied values with module-level defaults, captures
    `window.wx`, prepares share defaults from `document.title` and `location.href`, installs
    `window.LAUNCH_APP_UPDATE`, `window.LAUNCH_APP_BEFORE_DESTROY`, and
-   `window.LAUNCH_APP_SHOW_WEIXIN_TO_BROWSER`, and returns the lifecycle API.
+   `window.LAUNCH_APP_SHOW_WEIXIN_TO_BROWSER` and both stable share methods, and returns the API.
 3. Calling `start(data)` or `update(data)` runs the same `appUpdated` function. `canLaunchApp(data)`
    decides whether first-time WeChat initialization may proceed.
 4. The ticket is selected in this order: `options.weixinJsSdkTicket`,
    `window.LAUNCH_APP_WEIXIN_JS_SDK_TICKET`, the `weixinJsSdkTicket` URL query parameter, then an
    empty string. The imported `js-sha1` function signs the ticket, nonce, timestamp, and current
    URL before the values are sent to `wx.config`.
-5. In `wx.ready`, optional share settings are registered. If `openPlatformMobileAppId` is present,
+5. In `wx.ready`, the latest configured share data is sent through `updateAppMessageShareData`
+   and `updateTimelineShareData`. Before ready, each channel keeps its latest update; afterward,
+   share methods send immediately. New factory options take precedence over deprecated aliases.
+   Share readiness is independent of the mobile app ID. If `openPlatformMobileAppId` is present,
    the code marks `window.LAUNCH_APP_READY`, calls `launchReady`, finds every element matching
    `launchContainerQuery`, and appends a `wx-open-launch-app` tag when one is not already present.
 6. The generated tag emits `ready`, `launch`, `error`, and `click` events. Errors hide generated
@@ -108,10 +114,13 @@ instances needs focused regression tests and an explicit compatibility decision.
 
 - `package.json`: package identity, generated entry points, npm scripts, runtime dependencies,
   development dependencies, Husky hooks, and Node-era tooling.
-- `tsconfig.json`: strict TypeScript, ES5 target, ESNext modules, DOM libraries, declaration and
-  source-map emission to `lib`, plus local resolution for `mazey` and `tslib` types.
-- `.babelrc`: browser targets, TypeScript parsing, ES5-compatible transformation, usage-based
-  Core-JS injection, and Babel runtime helpers.
+- `tsconfig.json`: strict package TypeScript, ES2022 target, ESNext modules, Bundler resolution,
+  DOM libraries, exact optional properties, isolated modules, and declaration/source-map emission
+  to `lib`. Dependencies resolve through their package metadata.
+- `tsconfig.site.json`: ES2018 browser build settings for package source, website source, and the
+  Playground.
+- `.babelrc`: browser targets, TypeScript parsing, source transformation, and usage-based Core-JS
+  injection. Rollup excludes dependencies from Babel; this is not a package-wide ES5 guarantee.
 - `eslint.config.mjs`: flat TypeScript lint configuration and generated-directory exclusions.
 - `.prettierrc`, `.prettierignore`, and `.editorconfig`: formatting, whitespace, and line-ending
   rules.
@@ -126,9 +135,10 @@ instances needs focused regression tests and an explicit compatibility decision.
 
 ## Build And Development Pipeline
 
-Use Node.js 22.15.0 or later in the Node.js 22 release line, matching `.nvmrc`, `scripts/env.sh`,
-`package.json`, and the README. Contributors may use npm, pnpm, or Yarn. CI uses pnpm 10 and the
-committed `pnpm-lock.yaml`; do not commit locally generated `package-lock.json` or `yarn.lock` files.
+The README requires Node.js 22.15.0 or later in the Node.js 22 release line. CI selects Node.js 22.
+The published package does not declare an `engines` restriction because its runtime is the browser.
+Contributors may use npm, pnpm, or Yarn. CI uses pnpm 10 and the committed `pnpm-lock.yaml`; do not
+commit locally generated `package-lock.json` or `yarn.lock` files.
 
 ```bash
 npm run dev
@@ -172,6 +182,10 @@ npm run lint:fix
 - Avoid new dependencies without checking both output strategies: npm builds externalize runtime
   dependencies, while the IIFE bundles them.
 - Do not hand-edit `lib`, `dist-dev`, `docs`, `.pages-api`, or `coverage`. Rebuild from source.
+- The Home and Playground navbars use project-owned two-state light/dark buttons. Resolve the
+  operating-system preference only during initialization, persist only concrete `light` or `dark`
+  values under the configured project key, and keep TypeDoc's native `#tsd-theme` selector with
+  only its Light and Dark options in the final Pages artifact.
 - Keep tests deterministic; do not require a live WeChat session, real ticket, network access, or
   navigation to validate package logic.
 
@@ -187,8 +201,9 @@ checks that could not run, especially when Node.js 22 or dependencies are unavai
 
 ## CI And Release Safety
 
-Pull requests to `main` run the full preview pipeline on Node.js 22. Pushes to `main` run a separate
-workflow that performs a clean install, lints without mutation, builds, tests, and publishes to npm
-with `NPM_TOKEN`. Treat changes to `main`, `.github/workflows/publish.yml`, package identity,
-versioning, and release scripts as release-sensitive. Never push or publish as an implicit part of
-routine contributor work.
+Pull requests to `main` run the full preview pipeline on Node.js 22. Pushes to `main` and
+`release/v*` build, validate, and deploy the Pages artifact; manual Pages runs are also supported.
+Only pushes to `release/v*` run the npm workflow, which installs from the lockfile, lints, builds,
+tests, and publishes with `NPM_TOKEN`. Treat changes to release branches,
+`.github/workflows/publish.yml`, package identity, versioning, and release scripts as
+release-sensitive. Never push or publish as an implicit part of routine contributor work.

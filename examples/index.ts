@@ -9,8 +9,8 @@ interface PlaygroundValues {
 interface MockWx {
   config(options: Record<string, unknown>): void;
   error(callback: (error: unknown) => void): void;
-  onMenuShareAppMessage(): void;
-  onMenuShareTimeline(): void;
+  updateAppMessageShareData(): void;
+  updateTimelineShareData(): void;
   ready(callback: () => void): void;
 }
 
@@ -37,8 +37,8 @@ export function createMockWx(onConfig: (value: unknown) => void): MockWx {
       onConfig(options);
     },
     error() {},
-    onMenuShareAppMessage() {},
-    onMenuShareTimeline() {},
+    updateAppMessageShareData() {},
+    updateTimelineShareData() {},
     ready(callback) {
       callback();
     },
