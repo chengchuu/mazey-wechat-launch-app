@@ -22,6 +22,7 @@ unless the user explicitly asks.
 - `typing.d.ts`: ambient browser and public return-value declarations used by the TypeScript build.
   Keep these declarations synchronized with public methods and `window.LAUNCH_APP_*` globals.
 - `test/type.test.js`: Jest smoke tests for generated package entries and declarations.
+- `test/share.test.js`: deterministic share API tests against the generated CommonJS entry.
 - `test/site.test.js`: regression tests for project identity, Playground validation, the mock
   WeChat SDK, theme behavior, and TypeDoc Pages transformation.
 - `examples/`: crawlable Playground source that exercises the public root API with a local WeChat
@@ -65,14 +66,17 @@ the build config, package metadata, README examples, declarations, and tests tog
 2. Calling `LAUNCH_APP(options)` merges the supplied values with module-level defaults, captures
    `window.wx`, prepares share defaults from `document.title` and `location.href`, installs
    `window.LAUNCH_APP_UPDATE`, `window.LAUNCH_APP_BEFORE_DESTROY`, and
-   `window.LAUNCH_APP_SHOW_WEIXIN_TO_BROWSER`, and returns the lifecycle API.
+   `window.LAUNCH_APP_SHOW_WEIXIN_TO_BROWSER` and both stable share methods, and returns the API.
 3. Calling `start(data)` or `update(data)` runs the same `appUpdated` function. `canLaunchApp(data)`
    decides whether first-time WeChat initialization may proceed.
 4. The ticket is selected in this order: `options.weixinJsSdkTicket`,
    `window.LAUNCH_APP_WEIXIN_JS_SDK_TICKET`, the `weixinJsSdkTicket` URL query parameter, then an
    empty string. The imported `js-sha1` function signs the ticket, nonce, timestamp, and current
    URL before the values are sent to `wx.config`.
-5. In `wx.ready`, optional share settings are registered. If `openPlatformMobileAppId` is present,
+5. In `wx.ready`, the latest configured share data is sent through `updateAppMessageShareData`
+   and `updateTimelineShareData`. Before ready, each channel keeps its latest update; afterward,
+   share methods send immediately. New factory options take precedence over deprecated aliases.
+   Share readiness is independent of the mobile app ID. If `openPlatformMobileAppId` is present,
    the code marks `window.LAUNCH_APP_READY`, calls `launchReady`, finds every element matching
    `launchContainerQuery`, and appends a `wx-open-launch-app` tag when one is not already present.
 6. The generated tag emits `ready`, `launch`, `error`, and `click` events. Errors hide generated
@@ -110,13 +114,13 @@ instances needs focused regression tests and an explicit compatibility decision.
 
 - `package.json`: package identity, generated entry points, npm scripts, runtime dependencies,
   development dependencies, Husky hooks, and Node-era tooling.
-- `tsconfig.json`: strict package TypeScript, ES5 target, ESNext modules, DOM libraries,
-  declaration and source-map emission to `lib`, plus local resolution for `mazey` and `tslib`
-  types.
+- `tsconfig.json`: strict package TypeScript, ES2022 target, ESNext modules, Bundler resolution,
+  DOM libraries, exact optional properties, isolated modules, and declaration/source-map emission
+  to `lib`. Dependencies resolve through their package metadata.
 - `tsconfig.site.json`: ES2018 browser build settings for package source, website source, and the
   Playground.
-- `.babelrc`: browser targets, TypeScript parsing, ES5-compatible transformation, and usage-based
-  Core-JS injection.
+- `.babelrc`: browser targets, TypeScript parsing, source transformation, and usage-based Core-JS
+  injection. Rollup excludes dependencies from Babel; this is not a package-wide ES5 guarantee.
 - `eslint.config.mjs`: flat TypeScript lint configuration and generated-directory exclusions.
 - `.prettierrc`, `.prettierignore`, and `.editorconfig`: formatting, whitespace, and line-ending
   rules.

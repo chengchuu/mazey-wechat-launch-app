@@ -7,14 +7,29 @@ import {
 import $ from 'jquery';
 import sha1 from 'js-sha1';
 
+export interface UpdateTimelineShareDataOptions {
+  title: string;
+  link: string;
+  imgUrl: string;
+  /** Called when share data is configured, not when the user shares. */
+  success?: () => void;
+}
+
+export interface UpdateAppMessageShareDataOptions extends UpdateTimelineShareDataOptions {
+  desc: string;
+}
+
+/** @deprecated Use UpdateTimelineShareDataOptions. */
 export interface MenuShareTimelineOptions {
   title: string;
   link: string;
   imgUrl: string;
+  /** Called when share data is configured, not when the user shares. */
   success: () => void;
   cancel: () => void;
 }
 
+/** @deprecated Use UpdateAppMessageShareDataOptions. */
 export interface MenuShareAppMessageOptions {
   title: string;
   desc: string;
@@ -22,16 +37,17 @@ export interface MenuShareAppMessageOptions {
   imgUrl: string;
   type: string;
   dataUrl: string;
+  /** Called when share data is configured, not when the user shares. */
   success: () => void;
   cancel: () => void;
 }
 
 export type LAUNCH_APP_SHARE_TIMELINE = (
-  options: MenuShareTimelineOptions
+  options: UpdateTimelineShareDataOptions | MenuShareTimelineOptions
 ) => void;
 
 export type LAUNCH_APP_SHARE_APP_MESSAGE = (
-  options: MenuShareAppMessageOptions
+  options: UpdateAppMessageShareDataOptions | MenuShareAppMessageOptions
 ) => void;
 
 export interface retVal {
@@ -45,8 +61,42 @@ export interface retVal {
   destroy(): void;
 }
 
-// Default options.
-const defaultOptions = {
+export interface LaunchAppOptions {
+  weixinJsSdkTicket?: string;
+  launchContainerQuery?: string;
+  genTagPrefixStr?: string;
+  launchShowWeixinToBrowserImgUrl?: string;
+  canShowWeixinToBrowser?: boolean;
+  launchShowWeixinToBrowserClassName?: string;
+  launchBtnClassName?: string;
+  launchBtnStyle?: string;
+  launchBtnText?: string;
+  launchErrorLink?: string;
+  extInfo?: string;
+  serviceAccountAppId?: string;
+  wexinServiceAccountAppId?: string;
+  openPlatformMobileAppId?: string;
+  canContinuousUpdating?: boolean;
+  updateTimelineShareDataOptions?: UpdateTimelineShareDataOptions | undefined;
+  updateAppMessageShareDataOptions?:
+    UpdateAppMessageShareDataOptions | undefined;
+  /** @deprecated Use updateTimelineShareDataOptions. */
+  onMenuShareTimelineOptions?: MenuShareTimelineOptions | undefined;
+  /** @deprecated Use updateAppMessageShareDataOptions. */
+  onMenuShareAppMessageOptions?: MenuShareAppMessageOptions | undefined;
+  isConClosed?: boolean;
+  isWxDebug?: boolean;
+  openTagList?: string[];
+  canLaunchApp?: (data: any) => boolean;
+  canFireErrorLinkDirectly?: () => boolean;
+  launchBtnClick?: () => void;
+  launchReady?: () => void;
+}
+
+type DefaultOptions = { [K in keyof LaunchAppOptions]-?: LaunchAppOptions[K] };
+
+// Defaults intentionally persist across factory calls.
+const defaultOptions: DefaultOptions = {
   weixinJsSdkTicket: '',
   launchContainerQuery: '.mazey-launch-app-selector',
   launchShowWeixinToBrowserImgUrl: '',
@@ -64,6 +114,8 @@ const defaultOptions = {
   canContinuousUpdating: false,
   onMenuShareTimelineOptions: undefined,
   onMenuShareAppMessageOptions: undefined,
+  updateTimelineShareDataOptions: undefined,
+  updateAppMessageShareDataOptions: undefined,
   isConClosed: true,
   isWxDebug: false,
   openTagList: ['wx-open-launch-app'],
@@ -76,36 +128,9 @@ const defaultOptions = {
 /**
  * Launch App
  *
- * @returns {void}
+ * @returns Lifecycle and share-data methods.
  */
-export default (
-  options: {
-    weixinJsSdkTicket?: string;
-    launchContainerQuery?: string;
-    genTagPrefixStr?: string;
-    launchShowWeixinToBrowserImgUrl?: string;
-    canShowWeixinToBrowser?: boolean;
-    launchShowWeixinToBrowserClassName?: string;
-    launchBtnClassName?: string;
-    launchBtnStyle?: string;
-    launchBtnText?: string;
-    launchErrorLink?: string;
-    extInfo?: string;
-    serviceAccountAppId?: string;
-    wexinServiceAccountAppId?: string;
-    openPlatformMobileAppId?: string;
-    canContinuousUpdating?: boolean;
-    onMenuShareTimelineOptions?: MenuShareTimelineOptions;
-    onMenuShareAppMessageOptions?: MenuShareAppMessageOptions;
-    isConClosed?: boolean;
-    isWxDebug?: boolean;
-    openTagList?: string[];
-    canLaunchApp?: (data: any) => boolean;
-    canFireErrorLinkDirectly?: () => boolean;
-    launchBtnClick?: () => void;
-    launchReady?: () => void;
-  } = defaultOptions
-): retVal => {
+export default (options: LaunchAppOptions = defaultOptions): retVal => {
   const _options = Object.assign(defaultOptions, options);
   const {
     weixinJsSdkTicket,
@@ -123,6 +148,8 @@ export default (
     canContinuousUpdating,
     onMenuShareTimelineOptions,
     onMenuShareAppMessageOptions,
+    updateTimelineShareDataOptions,
+    updateAppMessageShareDataOptions,
     isConClosed,
     isWxDebug,
     openTagList,
@@ -135,17 +162,6 @@ export default (
   const LaunchCon = genCustomConsole('LaunchCon:', {
     isClosed: isConClosed,
   });
-  // Build:
-  const LAUNCH_APP_SHARE_TIMELINE: LAUNCH_APP_SHARE_TIMELINE = (
-    opt: MenuShareTimelineOptions
-  ) => {
-    LaunchCon.log('opt', opt);
-  };
-  const LAUNCH_APP_SHARE_APP_MESSAGE: LAUNCH_APP_SHARE_APP_MESSAGE = (
-    opt: MenuShareAppMessageOptions
-  ) => {
-    LaunchCon.log('opt', opt);
-  };
   const wx = window.wx;
   if (!wx) {
     console.error('Launch App: wx is not found');
@@ -153,35 +169,51 @@ export default (
   let batchGenerateWxTagFn: () => void = () => undefined;
   LaunchCon.log('Launch App');
 
-  let defaultTimeOptions = {
-    title: '',
-    link: '',
-    imgUrl: '',
-    success: () => undefined,
-    cancel: () => undefined,
-  };
-  let deafultMessageOptions = {
-    title: '',
-    desc: '',
-    link: '',
-    imgUrl: '',
-    type: '',
-    dataUrl: '',
-    success: () => undefined,
-    cancel: () => undefined,
-  };
   const defaultShareOptions = {
     title: document.title,
     link: location.href,
+    imgUrl: '',
   };
-  defaultTimeOptions = {
-    ...defaultTimeOptions,
-    ...defaultShareOptions,
+  const defaultMessageOptions = { ...defaultShareOptions, desc: '' };
+  let sdkReady = false;
+  let timelineOptions =
+    updateTimelineShareDataOptions !== undefined
+      ? updateTimelineShareDataOptions
+      : onMenuShareTimelineOptions;
+  let messageOptions =
+    updateAppMessageShareDataOptions !== undefined
+      ? updateAppMessageShareDataOptions
+      : onMenuShareAppMessageOptions;
+
+  const sendTimeline = (opt: UpdateTimelineShareDataOptions): void => {
+    const { title, link, imgUrl, success } = opt;
+    wx.updateTimelineShareData({
+      title,
+      link,
+      imgUrl,
+      ...(success === undefined ? {} : { success }),
+    });
   };
-  deafultMessageOptions = {
-    ...deafultMessageOptions,
-    ...defaultShareOptions,
+  const sendMessage = (opt: UpdateAppMessageShareDataOptions): void => {
+    const { title, desc, link, imgUrl, success } = opt;
+    wx.updateAppMessageShareData({
+      title,
+      desc,
+      link,
+      imgUrl,
+      ...(success === undefined ? {} : { success }),
+    });
   };
+  const LAUNCH_APP_SHARE_TIMELINE: LAUNCH_APP_SHARE_TIMELINE = (opt) => {
+    timelineOptions = { ...defaultShareOptions, ...opt };
+    if (sdkReady) sendTimeline(timelineOptions);
+  };
+  const LAUNCH_APP_SHARE_APP_MESSAGE: LAUNCH_APP_SHARE_APP_MESSAGE = (opt) => {
+    messageOptions = { ...defaultMessageOptions, ...opt };
+    if (sdkReady) sendMessage(messageOptions);
+  };
+  window.LAUNCH_APP_SHARE_TIMELINE = LAUNCH_APP_SHARE_TIMELINE;
+  window.LAUNCH_APP_SHARE_APP_MESSAGE = LAUNCH_APP_SHARE_APP_MESSAGE;
   const genLaunchBtn = (content = '', extStyle = '', tagName = 'button') => {
     const str =
       `<style>.${launchBtnClassName}{` +
@@ -212,6 +244,7 @@ export default (
     openPlatformMobileAppId = ''
   ) {
     LaunchCon.log('renderWXOpenLaunchApp');
+    sdkReady = false;
 
     return Promise.all([getTicket(), loadSha1()])
       .then((allRes) => {
@@ -248,49 +281,16 @@ export default (
           signature: signature, // 必填，签名
           jsApiList: [
             'showOptionMenu',
-            'onMenuShareTimeline',
-            'onMenuShareAppMessage',
+            'updateTimelineShareData',
+            'updateAppMessageShareData',
           ], // 必填，需要使用的 JS 接口列表
           openTagList, // 可选，需要使用的开放标签列表
         });
         wx.ready(function () {
           // config 信息验证后会执行 ready 方法，所有接口调用都必须在 config 接口获得结果之后，config 是一个客户端的异步操作，所以如果需要在页面加载时就调用相关接口，则须把相关接口放在 ready 函数中调用来确保正确执行。对于用户触发时才调用的接口，则可以直接调用，不需要放在 ready 函数中
-          // Share to app message
-          if (onMenuShareAppMessageOptions) {
-            LaunchCon.log(
-              'onMenuShareAppMessageOptions',
-              onMenuShareAppMessageOptions
-            );
-            wx.onMenuShareAppMessage(onMenuShareAppMessageOptions);
-          }
-          window.LAUNCH_APP_SHARE_APP_MESSAGE = (
-            opt: MenuShareAppMessageOptions
-          ) => {
-            opt = {
-              ...deafultMessageOptions,
-              ...opt,
-            };
-            LaunchCon.log('window LAUNCH_APP_SHARE_APP_MESSAGE', opt);
-            wx.onMenuShareAppMessage(opt);
-          };
-          // Share to timeline
-          if (onMenuShareTimelineOptions) {
-            LaunchCon.log(
-              'onMenuShareTimelineOptions',
-              onMenuShareTimelineOptions
-            );
-            wx.onMenuShareTimeline(onMenuShareTimelineOptions);
-          }
-          window.LAUNCH_APP_SHARE_TIMELINE = (
-            opt: MenuShareTimelineOptions
-          ) => {
-            opt = {
-              ...defaultTimeOptions,
-              ...opt,
-            };
-            LaunchCon.log('window LAUNCH_APP_SHARE_TIMELINE', opt);
-            wx.onMenuShareTimeline(opt);
-          };
+          sdkReady = true;
+          if (messageOptions !== undefined) sendMessage(messageOptions);
+          if (timelineOptions !== undefined) sendTimeline(timelineOptions);
           // Launch App
           if (!openPlatformMobileAppId) {
             LaunchCon.log(

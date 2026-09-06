@@ -96,8 +96,6 @@ app.start({});
 </script>
 ```
 
-提示：如果项目里面已经使用了 jQuery、js-sha1、mazey 依赖库，可以使用体积更小的版本 [`v2.1.4`](https://cdn.jsdelivr.net/npm/mazey-wechat-launch-app@2.1.4/lib/launch-app.min.js)。
-
 ## API
 
 ### 参数
@@ -119,6 +117,38 @@ app.start({});
 | `start`   | 生成 | function |
 | `update`  | 更新 | function |
 | `destroy` | 销毁 | function |
+
+### 分享配置与更新
+
+好友分享使用 `updateAppMessageShareDataOptions`，类型为 `UpdateAppMessageShareDataOptions`，包含 `title`、`desc`、`link` 和 `imgUrl`。朋友圈分享使用 `updateTimelineShareDataOptions`，类型为 `UpdateTimelineShareDataOptions`，包含 `title`、`link` 和 `imgUrl`。两种配置都支持可选的 `success` 回调。
+
+`success` 表示分享数据设置成功，不表示用户已完成分享。分享链接需符合微信 JS 安全域名要求。
+
+`onMenuShareAppMessageOptions`、`onMenuShareTimelineOptions` 和对应旧类型继续兼容，但已标记为 deprecated。每个渠道的新配置不为 `undefined` 时，采用完整的新配置，不合并旧配置字段。旧参数中的 `type`、`dataUrl` 和 `cancel` 不会传给新接口。
+
+```typescript
+const app = LAUNCH_APP({
+  weixinJsSdkTicket: 'valid-ticket',
+  serviceAccountAppId: 'wx-service',
+  updateAppMessageShareDataOptions: {
+    title: '分享标题',
+    desc: '分享描述',
+    link: 'https://example.com/',
+    imgUrl: 'https://example.com/icon.png',
+  },
+});
+
+app.LAUNCH_APP_SHARE_TIMELINE({
+  title: '朋友圈标题',
+  link: 'https://example.com/',
+  imgUrl: 'https://example.com/icon.png',
+});
+app.start({});
+```
+
+返回值中的 `LAUNCH_APP_SHARE_APP_MESSAGE` 和 `LAUNCH_APP_SHARE_TIMELINE`，与对应的 `window.LAUNCH_APP_*` 属性引用相同函数。工厂创建后即可调用；仍需调用 `start()` 初始化 SDK。ready 前每个渠道只保留最新配置，方法调用优先于工厂初始配置。ready 后调用方法会立即更新分享数据，无需提供 `openPlatformMobileAppId`。未配置的渠道不主动调用 SDK。
+
+参考：[微信 JS-SDK 文档](https://developers.weixin.qq.com/doc/service/guide/h5/jssdk.html)。
 
 ## FAQ
 
