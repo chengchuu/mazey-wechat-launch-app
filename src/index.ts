@@ -7,6 +7,44 @@ import {
 import $ from 'jquery';
 import sha1 from 'js-sha1';
 
+export interface MenuShareTimelineOptions {
+  title: string;
+  link: string;
+  imgUrl: string;
+  success: () => void;
+  cancel: () => void;
+}
+
+export interface MenuShareAppMessageOptions {
+  title: string;
+  desc: string;
+  link: string;
+  imgUrl: string;
+  type: string;
+  dataUrl: string;
+  success: () => void;
+  cancel: () => void;
+}
+
+export type LAUNCH_APP_SHARE_TIMELINE = (
+  options: MenuShareTimelineOptions
+) => void;
+
+export type LAUNCH_APP_SHARE_APP_MESSAGE = (
+  options: MenuShareAppMessageOptions
+) => void;
+
+export interface retVal {
+  LAUNCH_APP_UPDATE(data: any): void;
+  LAUNCH_APP_BEFORE_DESTROY(): void;
+  LAUNCH_APP_SHOW_WEIXIN_TO_BROWSER(): void;
+  LAUNCH_APP_SHARE_TIMELINE: LAUNCH_APP_SHARE_TIMELINE;
+  LAUNCH_APP_SHARE_APP_MESSAGE: LAUNCH_APP_SHARE_APP_MESSAGE;
+  start(data: any): void;
+  update(data: any): void;
+  destroy(): void;
+}
+
 // Default options.
 const defaultOptions = {
   weixinJsSdkTicket: '',
@@ -176,7 +214,7 @@ export default (
     LaunchCon.log('renderWXOpenLaunchApp');
 
     return Promise.all([getTicket(), loadSha1()])
-      .then(allRes => {
+      .then((allRes) => {
         LaunchCon.log('allRes', allRes);
         const ticket = allRes[0];
         if (!ticket) {
@@ -215,7 +253,7 @@ export default (
           ], // 必填，需要使用的 JS 接口列表
           openTagList, // 可选，需要使用的开放标签列表
         });
-        wx.ready(function() {
+        wx.ready(function () {
           // config 信息验证后会执行 ready 方法，所有接口调用都必须在 config 接口获得结果之后，config 是一个客户端的异步操作，所以如果需要在页面加载时就调用相关接口，则须把相关接口放在 ready 函数中调用来确保正确执行。对于用户触发时才调用的接口，则可以直接调用，不需要放在 ready 函数中
           // Share to app message
           if (onMenuShareAppMessageOptions) {
@@ -271,7 +309,7 @@ export default (
               containers.length
             );
             if (containers.length > 0) {
-              containers.each(function(index: number, el: any) {
+              containers.each(function (index: number, el: any) {
                 // Key
                 let key = $(el).attr('data-launch-app-key');
                 if (!key) {
@@ -330,37 +368,40 @@ export default (
                   const positionDomId = prefix + positionDomClass;
                   const tagStr =
                     '<wx-open-launch-app' +
-                    ' id=\'' +
+                    " id='" +
                     positionDomId +
-                    '\' appid=\'' +
+                    "' appid='" +
                     openPlatformMobileAppId +
                     `' extinfo='${extInfo}` +
-                    '\'' +
-                    ' style=\'z-index:99;position:absolute;width:100%;height:100%;opacity:1;background:transparent;overflow:hidden;left:0;\'' +
+                    "'" +
+                    " style='z-index:99;position:absolute;width:100%;height:100%;opacity:1;background:transparent;overflow:hidden;left:0;'" +
                     '>' +
-                    '<script type=\'text/wxtag-template\'>' +
+                    "<script type='text/wxtag-template'>" +
                     launchBtn +
                     '</script>' +
                     '</wx-open-launch-app>';
                   $('.' + positionDomClass + ':eq(0)').append(tagStr);
                   const mazeyLaunchBtn = document.getElementById(positionDomId);
                   if (mazeyLaunchBtn) {
-                    mazeyLaunchBtn.addEventListener('ready', function(e) {
+                    mazeyLaunchBtn.addEventListener('ready', function (e) {
                       // Ready
                       LaunchCon.log('ready event', e);
                     });
-                    mazeyLaunchBtn.addEventListener('launch', function(e: any) {
-                      // Launch
-                      LaunchCon.log('launch event', e);
-                      if (e.detail && e.detail.extInfo) {
-                        LaunchCon.log('launch extInfo', e.detail.extInfo);
+                    mazeyLaunchBtn.addEventListener(
+                      'launch',
+                      function (e: any) {
+                        // Launch
+                        LaunchCon.log('launch event', e);
+                        if (e.detail && e.detail.extInfo) {
+                          LaunchCon.log('launch extInfo', e.detail.extInfo);
+                        }
                       }
-                    });
-                    mazeyLaunchBtn.addEventListener('error', function(e: any) {
+                    );
+                    mazeyLaunchBtn.addEventListener('error', function (e: any) {
                       // Error
                       LaunchCon.error(e.detail);
                       // Prefix
-                      $('[id^=\'' + prefix + '\']').hide();
+                      $("[id^='" + prefix + "']").hide();
                       if (canShowWeixinToBrowser) {
                         launchShowWeixinToBrowser();
                       }
@@ -369,7 +410,7 @@ export default (
                         location.href = realErrorLink;
                       }
                     });
-                    mazeyLaunchBtn.addEventListener('click', function(e) {
+                    mazeyLaunchBtn.addEventListener('click', function (e) {
                       LaunchCon.log('click event', e);
                       launchBtnClick && launchBtnClick();
                     });
@@ -386,12 +427,12 @@ export default (
           batchGenerateWxTag();
           batchGenerateWxTagFn = batchGenerateWxTag;
         });
-        wx.error(function(res: any) {
+        wx.error(function (res: any) {
           LaunchCon.error(res);
         });
         return 'success:launch_app';
       })
-      .catch(err => {
+      .catch((err) => {
         LaunchCon.error(err);
       });
   }
@@ -427,17 +468,17 @@ export default (
       id: 'mazey-launch-app-mask-style',
     });
     if (!window.LAUNCH_APP_HIDE_WEIXIN_BROWSER) {
-      window.LAUNCH_APP_HIDE_WEIXIN_BROWSER = function() {
+      window.LAUNCH_APP_HIDE_WEIXIN_BROWSER = function () {
         $('.mazey-launch-app-mask').hide();
       };
     }
     if ($('.mazey-launch-app-mask').length === 0) {
       $('body').append(
-        '<div class=\'mazey-launch-app-mask\' onclick=\'window.LAUNCH_APP_HIDE_WEIXIN_BROWSER()\'>' +
+        "<div class='mazey-launch-app-mask' onclick='window.LAUNCH_APP_HIDE_WEIXIN_BROWSER()'>" +
           '<img ' +
           `class='mazey-launch-app-img ${launchShowWeixinToBrowserClassName}' ` +
           `src='${launchShowWeixinToBrowserImgUrl}' ` +
-          'alt=\'Launch App\' ' +
+          "alt='Launch App' " +
           '/>' +
           '</div>'
       );
@@ -488,7 +529,7 @@ export default (
     if (canFireErrorLinkDirectly()) {
       const containers = $(launchContainerQuery);
       if (containers.length > 0) {
-        containers.each(function(index: number, el: any) {
+        containers.each(function (index: number, el: any) {
           const c = $(el).children('.' + launchBtnClassName);
           if (c && c.length) {
             return;

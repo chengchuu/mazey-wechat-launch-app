@@ -54,6 +54,11 @@
       name="twitter:image:alt"
       content="<%= project.seo.openGraphImage.alt %>"
     />
+    <link
+      rel="sitemap"
+      href="<%= project.urls.sitemap %>"
+      type="application/xml"
+    />
     <script type="application/ld+json">
       <%= jsonLd %>
     </script>
@@ -103,7 +108,8 @@
               src="<%= publicPath %>images/logo.svg"
               alt=""
             />mazey-wechat-launch-app</a
-          ><button
+          >
+          <button
             class="navbar-toggler"
             type="button"
             aria-controls="site-navigation"
@@ -119,18 +125,15 @@
                 <a class="nav-link" href="<%= publicPath %>">首页</a>
               </li>
               <li class="nav-item">
-                <a
-                  class="nav-link active"
-                  aria-current="page"
-                  href="<%= publicPath %>playground/"
+                <a class="nav-link" href="<%= publicPath %>playground/"
                   >Playground</a
                 >
               </li>
               <li class="nav-item">
-                <a class="nav-link" href="<%= publicPath %>#install">安装</a>
+                <a class="nav-link" href="#install">安装</a>
               </li>
               <li class="nav-item">
-                <a class="nav-link" href="<%= publicPath %>#usage">用法</a>
+                <a class="nav-link" href="#usage">用法</a>
               </li>
               <li class="nav-item">
                 <a class="nav-link" href="<%= publicPath %>api/">API</a>
@@ -158,116 +161,142 @@
         </div>
       </nav>
     </header>
-    <main id="main" class="section-band">
-      <div class="container">
-        <div class="section-heading">
-          <h1>模拟微信 App 唤起标签</h1>
-          <p>
-            此示例使用本地模拟的微信 JS-SDK 调用包的公开默认导出，不发送
-            ticket，也不会尝试打开真实 App。
-          </p>
-        </div>
-        <div class="row g-4">
-          <div class="col-lg-5">
-            <form class="card playground-card" data-playground-form>
-              <div class="card-body">
-                <div class="mb-3">
-                  <label class="form-label" for="service-app-id"
-                    >公众号 AppID</label
-                  ><input
-                    class="form-control"
-                    id="service-app-id"
-                    name="serviceAppId"
-                    value="wx-service-demo"
-                    required
-                    pattern="[A-Za-z0-9_-]{3,64}"
-                    aria-describedby="service-help"
-                  />
-                  <div id="service-help" class="form-text">
-                    仅用于生成本地 JS-SDK 配置预览。
-                  </div>
-                </div>
-                <div class="mb-3">
-                  <label class="form-label" for="mobile-app-id"
-                    >移动应用 AppID</label
-                  ><input
-                    class="form-control"
-                    id="mobile-app-id"
-                    name="mobileAppId"
-                    value="wx-mobile-demo"
-                    required
-                    pattern="[A-Za-z0-9_-]{3,64}"
-                  />
-                </div>
-                <div class="mb-3">
-                  <label class="form-label" for="ext-info">扩展信息</label
-                  ><input
-                    class="form-control"
-                    id="ext-info"
-                    name="extInfo"
-                    value="source=playground"
-                    maxlength="160"
-                  />
-                </div>
-                <button class="btn btn-primary" type="submit">
-                  生成开放标签
-                </button>
-                <p
-                  class="status-region mt-3 mb-0"
-                  role="status"
-                  aria-live="polite"
-                  data-playground-status
-                ></p>
+    <main id="main">
+      <section class="hero">
+        <div class="container">
+          <div class="row align-items-center g-5">
+            <div class="col-lg-8">
+              <span class="badge text-bg-success">TypeScript npm 库</span>
+              <h1>在微信网页中生成 App 唤起开放标签</h1>
+              <p class="lead">
+                配置微信 JS-SDK 签名、生成
+                <code>wx-open-launch-app</code>
+                标签，并集中处理就绪、唤起和失败回调。
+              </p>
+              <div class="hero-actions">
+                <a
+                  class="btn btn-primary btn-lg"
+                  href="<%= publicPath %>playground/"
+                  >打开 Playground</a
+                ><a
+                  class="btn btn-outline-secondary btn-lg"
+                  href="<%= publicPath %>api/"
+                  >浏览 API</a
+                ><span data-pwa-install-container hidden
+                  ><button
+                    class="btn btn-outline-secondary btn-lg"
+                    type="button"
+                    data-pwa-install
+                    hidden
+                  >
+                    安装文档应用
+                  </button></span
+                >
               </div>
-            </form>
-          </div>
-          <div class="col-lg-7">
-            <section
-              class="card playground-card"
-              aria-labelledby="preview-title"
-            >
-              <div class="card-body">
-                <h2 id="preview-title" class="h4">生成结果</h2>
-                <div class="preview-button mazey-launch-app-selector">
-                  <span>模拟“打开 App”按钮</span>
-                </div>
-                <h3 class="h6 mt-4">开放标签 HTML</h3>
-                <pre
-                  class="output-code"
-                ><code data-tag-output>提交表单后显示生成结果。</code></pre>
-                <h3 class="h6 mt-4">JS-SDK 配置</h3>
-                <pre
-                  class="output-code"
-                ><code data-config-output>提交表单后显示模拟配置。</code></pre>
-              </div>
-            </section>
+            </div>
+            <div class="col-lg-4">
+              <img
+                class="project-visual"
+                src="<%= publicPath %>images/logo.svg"
+                alt="绿色对话框与跳转箭头组成的项目标志"
+              />
+            </div>
           </div>
         </div>
-        <noscript
-          ><div class="alert alert-warning mt-4">
-            Playground 需要 JavaScript 才能生成交互式预览；安装与 API
-            文档仍可直接访问。
-          </div></noscript
-        ><span data-pwa-install-container hidden
-          ><button
-            class="btn btn-outline-secondary mt-4"
-            type="button"
-            data-pwa-install
-            hidden
-          >
-            安装文档应用
-          </button></span
-        >
-        <p class="mt-4">
-          <a href="<%= publicPath %>">返回首页</a> ·
-          <a href="<%= publicPath %>api/">API 文档</a> ·
-          <a href="<%= project.urls.github %>">GitHub</a> ·
-          <a href="<%= project.urls.npm %>">npm</a>
-        </p>
-      </div>
+      </section>
+      <section id="install" class="section-band">
+        <div class="container">
+          <div class="section-heading">
+            <h2>安装</h2>
+            <p>从 npm 安装库，并通过默认导出的工厂函数创建实例。</p>
+          </div>
+          <div class="install-command">
+            <code>npm install mazey-wechat-launch-app</code
+            ><button class="btn btn-primary" type="button" data-copy-install>
+              复制
+            </button>
+          </div>
+          <p
+            class="status-region mt-2 mb-0"
+            role="status"
+            aria-live="polite"
+            data-copy-status
+          ></p>
+        </div>
+      </section>
+      <section id="usage" class="section-band section-band--muted">
+        <div class="container">
+          <div class="section-heading">
+            <h2>基本用法</h2>
+            <p>
+              传入 JS-SDK ticket、公众号 AppID、移动应用 AppID
+              和目标容器选择器，然后调用 <code>start()</code>。
+            </p>
+          </div>
+          <pre
+            class="code-sample"
+          ><code>import createLaunchApp from 'mazey-wechat-launch-app';
+
+const launchApp = createLaunchApp({
+  weixinJsSdkTicket: ticket,
+  serviceAccountAppId: 'wx-service-account-app-id',
+  openPlatformMobileAppId: 'wx-mobile-app-id',
+  launchContainerQuery: '.launch-app-button',
+  extInfo: 'product=123',
+});
+
+launchApp.start();</code></pre>
+        </div>
+      </section>
+      <section class="section-band">
+        <div class="container">
+          <div class="section-heading">
+            <h2>功能范围</h2>
+            <p>
+              库负责开放标签与微信 JS-SDK 集成；业务方仍需从可信服务端获取
+              ticket，并决定失败跳转与交互文案。
+            </p>
+          </div>
+          <div class="row g-3">
+            <div class="col-md-4">
+              <article class="card feature-card">
+                <div class="card-body">
+                  <h3>开放标签</h3>
+                  <p class="mb-0">
+                    为匹配的容器生成 <code>wx-open-launch-app</code>。
+                  </p>
+                </div>
+              </article>
+            </div>
+            <div class="col-md-4">
+              <article class="card feature-card">
+                <div class="card-body">
+                  <h3>生命周期</h3>
+                  <p class="mb-0">提供就绪、点击、更新和销毁相关方法。</p>
+                </div>
+              </article>
+            </div>
+            <div class="col-md-4">
+              <article class="card feature-card">
+                <div class="card-body">
+                  <h3>分享配置</h3>
+                  <p class="mb-0">支持微信好友与朋友圈分享配置。</p>
+                </div>
+              </article>
+            </div>
+          </div>
+        </div>
+      </section>
     </main>
     <footer class="site-footer">
-      <div class="container">该 Playground 仅模拟公开 API 的标签生成过程。</div>
+      <div class="container d-flex flex-wrap justify-content-between gap-3">
+        <span>mazey-wechat-launch-app · MIT License</span
+        ><span
+          ><a href="<%= project.urls.github %>">GitHub 仓库</a> ·
+          <a href="<%= project.urls.npm %>">npm 包</a> ·
+          <a href="<%= publicPath %>sitemap.xml">站点地图</a></span
+        >
+      </div>
     </footer>
     <div class="pwa-update-notice" data-pwa-update hidden>
       <span>网站有新版本可用。</span
