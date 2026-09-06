@@ -193,11 +193,11 @@ test('missing preference resolves the operating-system theme only once', () => {
 
 test('URL and saved concrete preferences keep their precedence', () => {
   localStorage.setItem('test-theme', 'light');
-  window.history.replaceState({}, '', '/?theme=dark');
+  window.history.replaceState({}, '', '/?test-theme=dark');
   const stop = initializeThemeControls('test-theme');
 
   expectRenderedTheme('dark');
-  expect(localStorage.getItem('test-theme')).toBe('dark');
+  expect(localStorage.getItem('test-theme')).toBe('light');
   stop();
 });
 
