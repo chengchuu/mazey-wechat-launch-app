@@ -13,6 +13,7 @@ declare global {
     LAUNCH_APP_UPDATE(data: any): void;
     LAUNCH_APP_BEFORE_DESTROY(): void;
     LAUNCH_APP_SHOW_WEIXIN_TO_BROWSER(): void;
+    /** Stable share-data methods, available immediately after factory creation. */
     LAUNCH_APP_SHARE_TIMELINE: LAUNCH_APP_SHARE_TIMELINE;
     LAUNCH_APP_SHARE_APP_MESSAGE: LAUNCH_APP_SHARE_APP_MESSAGE;
     // VAR

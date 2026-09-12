@@ -132,15 +132,34 @@ a {
   border-color: var(--launch-border);
 }
 
-.theme-control {
-  display: flex;
-  flex: 0 0 auto;
+.theme-toggle {
+  display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
+  justify-content: center;
+  flex: 0 0 auto;
+  box-sizing: border-box;
+  width: 32px;
+  height: 32px;
+  padding: 7px;
+  border: 1px solid var(--launch-border);
+  border-radius: 50%;
   color: var(--launch-muted);
-  font-size: 0.875rem;
-  font-weight: 600;
-  white-space: nowrap;
+  background: transparent;
+  cursor: pointer;
+}
+
+.theme-toggle:hover {
+  color: var(--launch-text);
+  background: var(--launch-muted-surface);
+}
+
+.theme-toggle svg {
+  width: 16px;
+  height: 16px;
+}
+
+.theme-toggle [hidden] {
+  display: none;
 }
 
 .hero {
@@ -311,10 +330,8 @@ a {
     padding: 1rem 0 0.75rem;
   }
 
-  .theme-control {
+  .theme-toggle {
     margin-top: 0.5rem;
-    padding-top: 0.75rem;
-    border-top: 1px solid var(--launch-border);
   }
 }
 
