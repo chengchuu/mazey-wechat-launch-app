@@ -2,7 +2,7 @@ import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import path, { dirname } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import projectConfig from '../project.config.js';
-import { pngDimensions } from './validate-pwa.mjs';
+import { jpegDimensions, pngDimensions } from './validate-pwa.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const sitePages = projectConfig.site.pages;
@@ -99,6 +99,34 @@ function validateSocialImage(label, html) {
     attribute(html, 'meta', 'name', 'twitter:image:alt')?.content !== image.alt
   )
     fail(`${label}: twitter:image:alt must match the Open Graph image alt`);
+}
+
+function validateIcons(label, html) {
+  for (const [rel, href, type, sizes] of [
+    [
+      'icon',
+      projectConfig.assets.faviconUrl,
+      projectConfig.assets.faviconType,
+      null,
+    ],
+    [
+      'apple-touch-icon',
+      projectConfig.assets.appleTouchIconUrl,
+      null,
+      `${projectConfig.assets.appleTouchIconSize}x${projectConfig.assets.appleTouchIconSize}`,
+    ],
+  ]) {
+    const links = matches(html, /<link\b[^>]*>/gi)
+      .map((match) => attributes(match[0]))
+      .filter((link) => link.rel === rel);
+    if (
+      links.length !== 1 ||
+      links[0].href !== href ||
+      (type && links[0].type !== type) ||
+      (sizes && links[0].sizes !== sizes)
+    )
+      fail(`${label}: expected one configured ${rel} link`);
+  }
 }
 
 function validateHeadingOrder(label, html) {
@@ -479,27 +507,61 @@ function validateStaticFiles() {
     'assets/playground.js',
     'assets/api.css',
     'assets/api.js',
-    `images/${projectConfig.assets.faviconFile}`,
-    `images/${projectConfig.assets.logoFile}`,
-    `images/${projectConfig.seo.openGraphImage.file}`,
+    ...projectConfig.assets.files.map((file) => `images/${file}`),
   ]) {
     if (!existsSync(path.join(docs, asset)))
       fail(`${asset}: missing from Pages artifact`);
   }
-  const openGraphImagePath = path.join(
-    docs,
-    'images',
-    projectConfig.seo.openGraphImage.file
-  );
-  if (existsSync(openGraphImagePath)) {
-    const dimensions = pngDimensions(openGraphImagePath);
-    if (
-      dimensions.width !== projectConfig.seo.openGraphImage.width ||
-      dimensions.height !== projectConfig.seo.openGraphImage.height
-    )
-      fail(
-        `Open Graph image dimensions must be ${projectConfig.seo.openGraphImage.width}x${projectConfig.seo.openGraphImage.height}, found ${dimensions.width}x${dimensions.height}`
-      );
+  const imageSizes = new Map([
+    [
+      projectConfig.assets.faviconFile,
+      [projectConfig.assets.faviconSize, projectConfig.assets.faviconSize],
+    ],
+    [
+      projectConfig.assets.logoFile,
+      [projectConfig.assets.logoSize, projectConfig.assets.logoSize],
+    ],
+    [
+      projectConfig.assets.appleTouchIconFile,
+      [
+        projectConfig.assets.appleTouchIconSize,
+        projectConfig.assets.appleTouchIconSize,
+      ],
+    ],
+    ...projectConfig.pwa.icons.map(({ file, sizes }) => [
+      file,
+      sizes.split('x').map(Number),
+    ]),
+    [
+      projectConfig.seo.openGraphImage.file,
+      [
+        projectConfig.seo.openGraphImage.width,
+        projectConfig.seo.openGraphImage.height,
+      ],
+    ],
+  ]);
+  for (const [file, [width, height]] of imageSizes) {
+    const output = path.join(docs, 'images', file);
+    if (!existsSync(output)) continue;
+    try {
+      const dimensions = file.endsWith('.jpg')
+        ? jpegDimensions(output)
+        : pngDimensions(output);
+      if (dimensions.width !== width || dimensions.height !== height)
+        fail(`${file}: expected dimensions ${width}x${height}`);
+      if (
+        !readFileSync(output).equals(
+          readFileSync(path.join(root, 'images', file))
+        )
+      )
+        fail(`${file}: supplied image bytes changed during assembly`);
+    } catch (error) {
+      fail(`${file}: ${error.message}`);
+    }
+  }
+  for (const file of findHtml(docs)) {
+    const html = readFileSync(file, 'utf8');
+    validateIcons(path.relative(docs, file), html);
   }
   const homeCss = path.join(docs, 'assets', 'shared.css');
   if (
