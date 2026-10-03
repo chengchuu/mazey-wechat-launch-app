@@ -158,6 +158,7 @@ function transformApiHtml(html, relativeFile) {
     `<meta name="description" content="${escapeAttribute(description)}"/>`,
     `<link rel="canonical" href="${url}"/>`,
     `<link rel="icon" href="${projectConfig.assets.faviconUrl}" type="${projectConfig.assets.faviconType}"/>`,
+    `<link rel="apple-touch-icon" href="${projectConfig.assets.appleTouchIconUrl}" sizes="${projectConfig.assets.appleTouchIconSize}x${projectConfig.assets.appleTouchIconSize}"/>`,
     `<link rel="manifest" href="${projectConfig.pwa.manifestUrl}"/>`,
     `<meta name="theme-color" content="${theme.colorLight}" data-theme-color data-theme-color-light="${theme.colorLight}" data-theme-color-dark="${theme.colorDark}"/>`,
     `<style>:root{--project-theme-primary:${theme.colorPrimary};--project-theme-primary-hover:${theme.primary.light.hover};--project-theme-primary-active:${theme.primary.light.active};--project-theme-primary-soft:${theme.primary.light.soft};--project-theme-primary-rgb:${theme.primary.light.rgb};--project-theme-primary-hover-rgb:${theme.primary.light.hoverRgb};--project-theme-primary-dark:${theme.primary.dark.base};--project-theme-primary-dark-hover:${theme.primary.dark.hover};--project-theme-primary-dark-active:${theme.primary.dark.active};--project-theme-primary-dark-soft:${theme.primary.dark.soft};--project-theme-primary-dark-rgb:${theme.primary.dark.rgb};--project-theme-primary-dark-hover-rgb:${theme.primary.dark.hoverRgb};--project-theme-light:${theme.colorLight};--project-theme-dark:${theme.colorDark}}</style>`,
@@ -186,7 +187,10 @@ function transformApiHtml(html, relativeFile) {
     .replace(/<title>[^<]*<\/title>/i, '')
     .replace(/<meta name="description"[^>]*>/i, '')
     .replace(/<link rel="canonical"[^>]*>/i, '')
-    .replace(/<link rel="icon"[^>]*>/i, '')
+    .replace(
+      /<link\b(?=[^>]*\brel=["'](?:icon|apple-touch-icon)["'])[^>]*>/gi,
+      ''
+    )
     .replace(
       /<script\b[^>]*>(?:(?!<\/script>)[\s\S])*?document\.body\.style\.display(?:(?!<\/script>)[\s\S])*?<\/script>/i,
       ''
@@ -278,6 +282,7 @@ function createManifest() {
 function pageAppShellAssets(html, pageUrl) {
   const allowedLinkRelations = new Set([
     'icon',
+    'apple-touch-icon',
     'manifest',
     'modulepreload',
     'preload',
@@ -388,6 +393,9 @@ function writePwaAssets(rootDir, docs) {
     new URL('api/', projectConfig.site.url).pathname,
     ...appShellAssets,
     ...projectConfig.pwa.icons.map(({ src }) => src),
+    ...projectConfig.assets.files.map(
+      (file) => `${projectConfig.site.basePath}images/${file}`
+    ),
   ].filter((asset, index, assets) => assets.indexOf(asset) === index);
   appShell.sort();
   for (const asset of appShell) {
@@ -443,7 +451,9 @@ function buildPages({ rootDir = defaultRoot } = {}) {
     path.join(dist, 'playground', 'index.html'),
     path.join(dist, 'assets', 'api.css'),
     path.join(dist, 'assets', 'api.js'),
-    path.join(dist, 'images', socialImage.file),
+    ...projectConfig.assets.files.map((file) =>
+      path.join(dist, 'images', file)
+    ),
     path.join(site, 'service-worker.js'),
     ...projectConfig.pwa.icons.map((icon) =>
       path.join(rootDir, 'images', icon.file)

@@ -15,8 +15,13 @@
     <link rel="canonical" href="<%= page.url %>" />
     <link
       rel="icon"
-      href="<%= publicPath %>images/logo.svg"
+      href="<%= publicPath %>images/<%= project.assets.faviconFile %>"
       type="<%= project.assets.faviconType %>"
+    />
+    <link
+      rel="apple-touch-icon"
+      href="<%= publicPath %>images/<%= project.assets.appleTouchIconFile %>"
+      sizes="<%= project.assets.appleTouchIconSize %>x<%= project.assets.appleTouchIconSize %>"
     />
     <% if (production) { %>
     <link rel="manifest" href="<%= project.pwa.manifestUrl %>" />
@@ -100,7 +105,7 @@
             href="<%= publicPath %>"
             ><img
               class="brand-logo"
-              src="<%= publicPath %>images/logo.svg"
+              src="<%= publicPath %>images/<%= project.assets.logoFile %>"
               alt=""
             />mazey-wechat-launch-app</a
           ><button

@@ -71,6 +71,37 @@ function htmlAttributes(tag) {
   );
 }
 
+function jpegDimensions(file) {
+  const contents = readFileSync(file);
+  if (contents.length < 2 || contents.readUInt16BE(0) !== 0xffd8)
+    throw new Error(`${file}: expected a JPEG signature`);
+  let offset = 2;
+  while (offset < contents.length) {
+    if (contents[offset++] !== 0xff)
+      throw new Error(`${file}: invalid JPEG marker`);
+    while (contents[offset] === 0xff) offset += 1;
+    const marker = contents[offset++];
+    if (marker === 0xd9 || marker === 0xda) break;
+    if (offset + 2 > contents.length)
+      throw new Error(`${file}: truncated JPEG segment`);
+    const length = contents.readUInt16BE(offset);
+    if (length < 2 || offset + length > contents.length)
+      throw new Error(`${file}: invalid JPEG segment length`);
+    // The supplied progressive JPEG uses SOF2; baseline JPEGs use SOF0.
+    if (marker === 0xc0 || marker === 0xc2) {
+      if (length < 8) throw new Error(`${file}: truncated JPEG frame`);
+      const height = contents.readUInt16BE(offset + 3);
+      const width = contents.readUInt16BE(offset + 5);
+      const components = contents[offset + 7];
+      if (!width || !height || !components || length !== 8 + 3 * components)
+        throw new Error(`${file}: invalid JPEG frame`);
+      return { width, height };
+    }
+    offset += length;
+  }
+  throw new Error(`${file}: missing baseline or progressive JPEG frame`);
+}
+
 function findTag(html, tagName, attributeName, value) {
   return [...html.matchAll(new RegExp(`<${tagName}\\b[^>]*>`, 'gi'))]
     .map((match) => htmlAttributes(match[0]))
@@ -138,6 +169,18 @@ function validatePwa({ rootDir = defaultRoot } = {}) {
     let hasMaskable = false;
     const icons = Array.isArray(manifest.icons) ? manifest.icons : [];
     iconCount = icons.length;
+    const expectedIcons = projectConfig.pwa.icons;
+    if (
+      icons.length !== expectedIcons.length ||
+      icons.some((icon, index) =>
+        ['src', 'sizes', 'type', 'purpose'].some(
+          (field) => icon?.[field] !== expectedIcons[index]?.[field]
+        )
+      )
+    )
+      fail(
+        'Manifest icons must match configured standard and maskable mappings'
+      );
     for (const icon of icons) {
       if (icon === null || typeof icon !== 'object' || Array.isArray(icon)) {
         fail('Manifest icons must contain objects');
@@ -304,6 +347,11 @@ function validatePwa({ rootDir = defaultRoot } = {}) {
       fail('Service worker must ignore cross-origin requests');
     if (/SKIP_WAITING|skipWaiting\s*\(/.test(worker))
       fail('Service worker contains forced update activation');
+    for (const file of projectConfig.assets.files) {
+      const asset = `${projectConfig.site.basePath}images/${file}`;
+      if (!worker.includes(asset))
+        fail(`Service worker does not precache supplied image: ${asset}`);
+    }
     const entryPages = [
       [path.join(docs, 'index.html'), projectConfig.site.pages.home.url],
       [
@@ -372,5 +420,6 @@ export {
   hasPwaRuntimeReference,
   manifestMetadataFailures,
   pngDimensions,
+  jpegDimensions,
   validatePwa,
 };
