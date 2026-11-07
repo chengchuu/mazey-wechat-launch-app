@@ -351,6 +351,147 @@ function typeDocFixture(themeOptions) {
   return `<!doctype html><html><head><title>API Reference</title></head><body><header><div class="tsd-toolbar-contents container"></div></header><div class="tsd-theme-toggle"><label class="settings-label" for="tsd-theme">Theme</label><select id="tsd-theme">${themeOptions}</select></div><main><div class="tsd-page-title"><h2>API</h2></div><h1>mazey-wechat-launch-app</h1></main></body></html>`;
 }
 
+function runSiteScript(script) {
+  return spawnSync(
+    process.execPath,
+    ['--input-type=module', '--eval', script],
+    {
+      cwd: path.resolve(__dirname, '..'),
+      encoding: 'utf8',
+    }
+  );
+}
+
+test('website builds use the six supplied raster assets and matching metadata', () => {
+  const project = require('../project.config');
+  const webpack = require('../scripts/webpack.config.dev');
+  expect(project.assets.files).toEqual([
+    'logo-32x32.png',
+    'logo-192x192.png',
+    'logo-apple-touch-180x180.png',
+    'logo-open-graph-1200x630.jpg',
+    'logo-512x512.png',
+    'logo-maskable-512x512.png',
+  ]);
+  expect(project.assets.faviconType).toBe('image/png');
+  expect(project.seo.openGraphImage).toMatchObject({
+    file: 'logo-open-graph-1200x630.jpg',
+    type: 'image/jpeg',
+    width: 1200,
+    height: 630,
+  });
+  expect(
+    project.pwa.icons.map(({ file, purpose, sizes }) => [file, purpose, sizes])
+  ).toEqual([
+    ['logo-192x192.png', 'any', '192x192'],
+    ['logo-512x512.png', 'any', '512x512'],
+    ['logo-maskable-512x512.png', 'maskable', '512x512'],
+  ]);
+  expect(webpack.entry.shared.import.slice(1)).toEqual(
+    project.assets.files.map((file) =>
+      path.resolve(__dirname, '../images', file)
+    )
+  );
+  const imageRule = webpack.module.rules.find(
+    (rule) => rule.type === 'asset/resource'
+  );
+  for (const file of project.assets.files) {
+    expect(imageRule.test.test(file)).toBe(true);
+    expect(fs.existsSync(path.resolve(__dirname, '../images', file))).toBe(
+      true
+    );
+  }
+  for (const file of ['site/index.html', 'examples/index.html']) {
+    const template = fs.readFileSync(
+      path.resolve(__dirname, '..', file),
+      'utf8'
+    );
+    expect(template).toContain('project.assets.faviconFile');
+    expect(template).toContain('project.assets.appleTouchIconFile');
+    expect(template).toContain('project.assets.logoFile');
+    expect(template).toContain('rel="apple-touch-icon"');
+    expect(template).not.toContain('logo.svg');
+  }
+});
+
+test('JPEG validation supports progressive and baseline frames and rejects malformed headers', () => {
+  const result = runSiteScript(`
+    import assert from 'node:assert/strict';
+    import { mkdtempSync, writeFileSync, rmSync } from 'node:fs';
+    import { tmpdir } from 'node:os';
+    import path from 'node:path';
+    import { jpegDimensions } from './scripts/validate-pwa.mjs';
+    const dir = mkdtempSync(path.join(tmpdir(), 'launch-app-jpeg-'));
+    const file = path.join(dir, 'fixture.jpg');
+    try {
+      assert.deepEqual(jpegDimensions('./images/logo-open-graph-1200x630.jpg'), { width: 1200, height: 630 });
+      for (const marker of [0xc0, 0xc2]) {
+        writeFileSync(file, Buffer.from([0xff, 0xd8, 0xff, marker, 0, 11, 8, 0, 20, 0, 30, 1, 1, 0x11, 0]));
+        assert.deepEqual(jpegDimensions(file), { width: 30, height: 20 });
+      }
+      for (const bytes of [[], [0xff, 0xd8, 0xff, 0xc2, 0], [0xff, 0xd8, 0xff, 0xc2, 0, 1], [0xff, 0xd8, 0xff, 0xd9]]) {
+        writeFileSync(file, Buffer.from(bytes));
+        assert.throws(() => jpegDimensions(file), /JPEG/);
+      }
+      writeFileSync(file, Buffer.from([0xff, 0xd8, 0xff, 0xc2, 0, 8, 8, 0, 0, 0, 30, 0]));
+      assert.throws(() => jpegDimensions(file), /invalid JPEG frame/);
+    } finally { rmSync(dir, { recursive: true, force: true }); }
+  `);
+  expect(result.stderr).toBe('');
+  expect(result.status).toBe(0);
+});
+
+test('Pages preserves supplied image bytes, precaches them, and rejects missing assets', () => {
+  const fixture = typeDocFixture(
+    '<option value="os">OS</option><option value="light">Light</option><option value="dark">Dark</option>'
+  );
+  const result = runSiteScript(`
+    import assert from 'node:assert/strict';
+    import { mkdtempSync, mkdirSync, cpSync, writeFileSync, readFileSync, rmSync } from 'node:fs';
+    import { tmpdir } from 'node:os';
+    import path from 'node:path';
+    import project from './project.config.js';
+    import { buildPages, pageAppShellAssets } from './scripts/build-pages.mjs';
+    import { validatePwa } from './scripts/validate-pwa.mjs';
+    const dir = mkdtempSync(path.join(tmpdir(), 'launch-app-pages-'));
+    try {
+      for (const name of ['dist-dev/assets', 'dist-dev/images', 'dist-dev/playground', '.pages-api/classes', 'site', 'images', 'src'])
+        mkdirSync(path.join(dir, name), { recursive: true });
+      for (const file of project.assets.files) {
+        cpSync(path.join('images', file), path.join(dir, 'images', file));
+        cpSync(path.join('images', file), path.join(dir, 'dist-dev/images', file));
+      }
+      cpSync('site/service-worker.js', path.join(dir, 'site/service-worker.js'));
+      for (const file of ['api.css', 'api.js']) writeFileSync(path.join(dir, 'dist-dev/assets', file), '');
+      for (const file of ['index.html', 'playground/index.html']) writeFileSync(path.join(dir, 'dist-dev', file), '<html><head></head></html>');
+      const fixture = ${JSON.stringify(fixture)};
+      for (const file of ['index.html', 'classes/example.html']) writeFileSync(path.join(dir, '.pages-api', file), fixture);
+      buildPages({ rootDir: dir });
+      for (const file of project.assets.files)
+        assert(readFileSync(path.join(dir, 'docs/images', file)).equals(readFileSync(path.join('images', file))));
+      const worker = readFileSync(path.join(dir, 'docs/service-worker.js'), 'utf8');
+      for (const file of project.assets.files) assert(worker.includes(project.site.basePath + 'images/' + file));
+      const manifestFile = path.join(dir, 'docs/manifest.webmanifest');
+      const manifest = JSON.parse(readFileSync(manifestFile, 'utf8'));
+      assert.deepEqual(manifest.icons, project.pwa.icons.map(({ src, sizes, type, purpose }) => ({ src, sizes, type, purpose })));
+      manifest.icons[0].src = project.site.basePath + 'images/' + project.assets.icon512File;
+      writeFileSync(manifestFile, JSON.stringify(manifest));
+      assert.throws(() => validatePwa({ rootDir: dir }), /configured standard and maskable mappings/);
+      assert(pageAppShellAssets('<link rel="apple-touch-icon" href="' + project.assets.appleTouchIconUrl + '">', project.site.url).includes(project.assets.appleTouchIconUrl));
+      for (const file of ['index.html', 'classes/example.html']) {
+        const html = readFileSync(path.join(dir, 'docs/api', file), 'utf8');
+        assert(html.includes(project.assets.appleTouchIconUrl));
+        assert(html.includes(project.assets.faviconUrl));
+        assert(html.includes('image/jpeg'));
+      }
+      rmSync(path.join(dir, 'dist-dev/images', project.assets.faviconFile));
+      assert.throws(() => buildPages({ rootDir: dir }), /Required Pages source is missing/);
+    } finally { rmSync(dir, { recursive: true, force: true }); }
+  `);
+  expect(result.stderr).toBe('');
+  expect(result.status).toBe(0);
+});
+
 function transformApiHtml(html) {
   const script = `
     import { transformApiHtml } from './scripts/build-pages.mjs';
@@ -372,6 +513,9 @@ function transformApiHtml(html) {
 test('TypeDoc transformation preserves its selector and removes only OS', () => {
   const source = typeDocFixture(
     '<option value="os">OS</option><option value="light">Light</option><option value="dark">Dark</option>'
+  ).replace(
+    '</head>',
+    '<link rel="icon" href="old.svg"><link rel="apple-touch-icon" href="old.png"></head>'
   );
   const first = transformApiHtml(source);
   expect(first.status).toBe(0);
@@ -382,6 +526,9 @@ test('TypeDoc transformation preserves its selector and removes only OS', () => 
   expect(transformed).not.toContain('value="os"');
   expect(transformed).not.toContain('mazey-api-theme');
   expect(transformed).not.toContain('data-theme-select');
+  expect(transformed).not.toContain('old.svg');
+  expect(transformed).not.toContain('old.png');
+  expect((transformed.match(/rel="apple-touch-icon"/g) || []).length).toBe(1);
   for (const iconPath of bootstrapThemeIconPaths)
     expect(transformed).toContain(iconPath);
   const second = transformApiHtml(transformed);

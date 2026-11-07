@@ -21,8 +21,6 @@ const socialImage = projectConfig.seo.openGraphImage;
 const markerPrefix = projectConfig.site.markerPrefix;
 const seoStart = `<!-- ${markerPrefix}-seo:start -->`;
 const seoEnd = `<!-- ${markerPrefix}-seo:end -->`;
-const pwaUiStart = `<!-- ${markerPrefix}-pwa-ui:start -->`;
-const pwaUiEnd = `<!-- ${markerPrefix}-pwa-ui:end -->`;
 
 function escapeAttribute(value) {
   return value
@@ -115,14 +113,11 @@ function transformApiHtml(html, relativeFile) {
   const alreadyTransformed =
     html.includes(seoStart) &&
     html.includes(seoEnd) &&
-    html.includes(pwaUiStart) &&
-    html.includes(pwaUiEnd) &&
     html.includes('<nav class="site-project-links"') &&
     html.includes('data-theme-toggle');
   const cleanHtml = html
     .replace(markerExpression(seoStart, seoEnd), '')
-    .replace(/<nav class="site-project-links"[\s\S]*?<\/nav>/g, '')
-    .replace(markerExpression(pwaUiStart, pwaUiEnd), '');
+    .replace(/<nav class="site-project-links"[\s\S]*?<\/nav>/g, '');
   const isIndex = relativeFile === 'index.html';
   const routeName = path.basename(relativeFile, '.html');
   const existingTitle = cleanHtml
@@ -163,6 +158,7 @@ function transformApiHtml(html, relativeFile) {
     `<meta name="description" content="${escapeAttribute(description)}"/>`,
     `<link rel="canonical" href="${url}"/>`,
     `<link rel="icon" href="${projectConfig.assets.faviconUrl}" type="${projectConfig.assets.faviconType}"/>`,
+    `<link rel="apple-touch-icon" href="${projectConfig.assets.appleTouchIconUrl}" sizes="${projectConfig.assets.appleTouchIconSize}x${projectConfig.assets.appleTouchIconSize}"/>`,
     `<link rel="manifest" href="${projectConfig.pwa.manifestUrl}"/>`,
     `<meta name="theme-color" content="${theme.colorLight}" data-theme-color data-theme-color-light="${theme.colorLight}" data-theme-color-dark="${theme.colorDark}"/>`,
     `<style>:root{--project-theme-primary:${theme.colorPrimary};--project-theme-primary-hover:${theme.primary.light.hover};--project-theme-primary-active:${theme.primary.light.active};--project-theme-primary-soft:${theme.primary.light.soft};--project-theme-primary-rgb:${theme.primary.light.rgb};--project-theme-primary-hover-rgb:${theme.primary.light.hoverRgb};--project-theme-primary-dark:${theme.primary.dark.base};--project-theme-primary-dark-hover:${theme.primary.dark.hover};--project-theme-primary-dark-active:${theme.primary.dark.active};--project-theme-primary-dark-soft:${theme.primary.dark.soft};--project-theme-primary-dark-rgb:${theme.primary.dark.rgb};--project-theme-primary-dark-hover-rgb:${theme.primary.dark.hoverRgb};--project-theme-light:${theme.colorLight};--project-theme-dark:${theme.colorDark}}</style>`,
@@ -191,7 +187,10 @@ function transformApiHtml(html, relativeFile) {
     .replace(/<title>[^<]*<\/title>/i, '')
     .replace(/<meta name="description"[^>]*>/i, '')
     .replace(/<link rel="canonical"[^>]*>/i, '')
-    .replace(/<link rel="icon"[^>]*>/i, '')
+    .replace(
+      /<link\b(?=[^>]*\brel=["'](?:icon|apple-touch-icon)["'])[^>]*>/gi,
+      ''
+    )
     .replace(
       /<script\b[^>]*>(?:(?!<\/script>)[\s\S])*?document\.body\.style\.display(?:(?!<\/script>)[\s\S])*?<\/script>/i,
       ''
@@ -209,15 +208,6 @@ function transformApiHtml(html, relativeFile) {
     `${toolbar}<nav class="site-project-links" aria-label="Project links"><a href="${pages.home.url}">Project home</a><a href="${pages.api.url}">API overview</a><a href="${projectConfig.urls.github}">GitHub</a><a href="${projectConfig.urls.npm}">npm package</a><span class="site-pwa-status" role="status" aria-live="polite" data-pwa-status></span>${themeToggleHtml()}</nav>`
   );
 
-  const pwaUi = [
-    pwaUiStart,
-    '<aside class="site-pwa-update" aria-label="Website update" data-pwa-update hidden>',
-    `<span>A new version of the ${escapeAttribute(displayName)} website is available.</span>`,
-    '<button type="button" data-pwa-update-now>Update now</button>',
-    '</aside>',
-    pwaUiEnd,
-  ].join('');
-  output = output.replace('</body>', `${pwaUi}</body>`);
   output = ensurePrimaryApiHeading(output, isIndex);
   return normalizeHeadingOrder(output);
 }
@@ -292,6 +282,7 @@ function createManifest() {
 function pageAppShellAssets(html, pageUrl) {
   const allowedLinkRelations = new Set([
     'icon',
+    'apple-touch-icon',
     'manifest',
     'modulepreload',
     'preload',
@@ -402,6 +393,9 @@ function writePwaAssets(rootDir, docs) {
     new URL('api/', projectConfig.site.url).pathname,
     ...appShellAssets,
     ...projectConfig.pwa.icons.map(({ src }) => src),
+    ...projectConfig.assets.files.map(
+      (file) => `${projectConfig.site.basePath}images/${file}`
+    ),
   ].filter((asset, index, assets) => assets.indexOf(asset) === index);
   appShell.sort();
   for (const asset of appShell) {
@@ -457,7 +451,9 @@ function buildPages({ rootDir = defaultRoot } = {}) {
     path.join(dist, 'playground', 'index.html'),
     path.join(dist, 'assets', 'api.css'),
     path.join(dist, 'assets', 'api.js'),
-    path.join(dist, 'images', socialImage.file),
+    ...projectConfig.assets.files.map((file) =>
+      path.join(dist, 'images', file)
+    ),
     path.join(site, 'service-worker.js'),
     ...projectConfig.pwa.icons.map((icon) =>
       path.join(rootDir, 'images', icon.file)
