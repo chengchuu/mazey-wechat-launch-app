@@ -1,8 +1,8 @@
-declare module '*.css';
-declare module '*.png';
-declare module '*.svg';
+declare module "*.css";
+declare module "*.png";
+declare module "*.svg";
 
-declare module 'bootstrap/js/dist/collapse' {
+declare module "bootstrap/js/dist/collapse" {
   interface CollapseOptions {
     toggle?: boolean;
   }
@@ -10,7 +10,7 @@ declare module 'bootstrap/js/dist/collapse' {
   export default class Collapse {
     static getOrCreateInstance(
       element: Element,
-      options?: CollapseOptions
+      options?: CollapseOptions,
     ): Collapse;
     hide(): void;
     toggle(): void;

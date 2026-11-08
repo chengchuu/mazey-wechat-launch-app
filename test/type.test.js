@@ -1,18 +1,18 @@
-import LAUNCH_APP from '../lib/index.esm';
+import LAUNCH_APP from "../lib/index.esm";
 
-const path = require('node:path');
-const ts = require('typescript');
+const path = require("node:path");
+const ts = require("typescript");
 
-test('Is LAUNCH_APP function?', () => {
-  expect(typeof LAUNCH_APP === 'function').toBe(true);
+test("Is LAUNCH_APP function?", () => {
+  expect(typeof LAUNCH_APP === "function").toBe(true);
 });
 
-test('Published declarations compile for a package consumer', () => {
-  const projectRoot = path.resolve(__dirname, '..');
+test("Published declarations compile for a package consumer", () => {
+  const projectRoot = path.resolve(__dirname, "..");
   const consumerPath = path.join(
     projectRoot,
-    '.package-types-test',
-    'consumer.ts'
+    ".package-types-test",
+    "consumer.ts",
   );
   const consumerSource = `
     import LAUNCH_APP, {
@@ -78,16 +78,16 @@ test('Published declarations compile for a package consumer', () => {
       : getSourceFile(fileName, languageVersion, onError);
 
   const program = ts.createProgram(
-    [consumerPath],
+    [ consumerPath ],
     compilerOptions,
-    compilerHost
+    compilerHost,
   );
   const diagnostics = ts.getPreEmitDiagnostics(program);
   const message = ts.formatDiagnosticsWithColorAndContext(diagnostics, {
     getCanonicalFileName: (fileName) => fileName,
     getCurrentDirectory: () => projectRoot,
-    getNewLine: () => '\n',
+    getNewLine: () => "\n",
   });
 
-  expect(message).toBe('');
+  expect(message).toBe("");
 });

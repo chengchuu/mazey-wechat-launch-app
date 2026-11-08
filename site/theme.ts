@@ -1,14 +1,14 @@
-import { resolveThemePreference, setThemePreference } from 'mazey';
-import type { ResolvedTheme } from 'mazey';
+import { resolveThemePreference, setThemePreference } from "mazey";
+import type { ResolvedTheme } from "mazey";
 
 function themeFromTypeDoc(value: string): ResolvedTheme | null {
-  if (value === 'light' || value === 'dark') return value;
+  if (value === "light" || value === "dark") return value;
   return null;
 }
 
 export function initializeThemeControls(storageKey: string): () => void {
   const root = document.documentElement;
-  if (root.dataset.themeControlsReady === 'true') return () => undefined;
+  if (root.dataset.themeControlsReady === "true") return () => undefined;
 
   let resolvedTheme: ResolvedTheme = resolveThemePreference(storageKey).value;
 
@@ -18,20 +18,20 @@ export function initializeThemeControls(storageKey: string): () => void {
     root.dataset.theme = theme;
     root.style.colorScheme = theme;
     const themeColor = document.querySelector<HTMLMetaElement>(
-      'meta[name="theme-color"][data-theme-color]'
+      "meta[name=\"theme-color\"][data-theme-color]",
     );
     if (themeColor) {
       themeColor.content =
-        theme === 'dark'
+        theme === "dark"
           ? (themeColor.dataset.themeColorDark ?? themeColor.content)
           : (themeColor.dataset.themeColorLight ?? themeColor.content);
     }
     try {
-      window.localStorage.setItem('tsd-theme', theme);
+      window.localStorage.setItem("tsd-theme", theme);
     } catch {
       // TypeDoc synchronization is optional when storage is unavailable.
     }
-    const typeDocControl = document.getElementById('tsd-theme');
+    const typeDocControl = document.getElementById("tsd-theme");
     if (
       typeDocControl instanceof HTMLSelectElement &&
       typeDocControl.value !== theme
@@ -39,19 +39,19 @@ export function initializeThemeControls(storageKey: string): () => void {
       typeDocControl.value = theme;
     }
 
-    const currentTheme = theme === 'light' ? 'Light' : 'Dark';
-    const nextTheme = theme === 'light' ? 'dark' : 'light';
+    const currentTheme = theme === "light" ? "Light" : "Dark";
+    const nextTheme = theme === "light" ? "dark" : "light";
     document
-      .querySelectorAll<HTMLButtonElement>('[data-theme-toggle]')
+      .querySelectorAll<HTMLButtonElement>("[data-theme-toggle]")
       .forEach((button) => {
         button.setAttribute(
-          'aria-label',
-          `Current theme: ${currentTheme}. Switch to ${nextTheme} theme.`
+          "aria-label",
+          `Current theme: ${currentTheme}. Switch to ${nextTheme} theme.`,
         );
         button
-          .querySelectorAll<SVGElement>('[data-theme-icon]')
+          .querySelectorAll<SVGElement>("[data-theme-icon]")
           .forEach((icon) => {
-            icon.toggleAttribute('hidden', icon.dataset.themeIcon !== theme);
+            icon.toggleAttribute("hidden", icon.dataset.themeIcon !== theme);
           });
       });
   };
@@ -59,18 +59,18 @@ export function initializeThemeControls(storageKey: string): () => void {
   const handleClick = (event: MouseEvent): void => {
     const target = event.target;
     if (!(target instanceof Element)) return;
-    const button = target.closest<HTMLButtonElement>('[data-theme-toggle]');
+    const button = target.closest<HTMLButtonElement>("[data-theme-toggle]");
     if (!button) return;
 
     const nextTheme: ResolvedTheme =
-      resolvedTheme === 'light' ? 'dark' : 'light';
+      resolvedTheme === "light" ? "dark" : "light";
     setThemePreference(storageKey, nextTheme);
     apply(nextTheme);
   };
 
   const handleChange = (event: Event): void => {
     const control = event.target;
-    if (!(control instanceof HTMLSelectElement) || control.id !== 'tsd-theme')
+    if (!(control instanceof HTMLSelectElement) || control.id !== "tsd-theme")
       return;
     const theme = themeFromTypeDoc(control.value);
     if (!theme) {
@@ -82,13 +82,13 @@ export function initializeThemeControls(storageKey: string): () => void {
     apply(theme);
   };
 
-  root.dataset.themeControlsReady = 'true';
+  root.dataset.themeControlsReady = "true";
   apply(resolvedTheme);
-  document.addEventListener('click', handleClick);
-  document.addEventListener('change', handleChange);
+  document.addEventListener("click", handleClick);
+  document.addEventListener("change", handleChange);
   return () => {
-    document.removeEventListener('click', handleClick);
-    document.removeEventListener('change', handleChange);
+    document.removeEventListener("click", handleClick);
+    document.removeEventListener("change", handleChange);
     delete root.dataset.themeControlsReady;
   };
 }
