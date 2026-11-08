@@ -1,58 +1,58 @@
-const path = require('path');
-const webpack = require('webpack');
-const HtmlWebpackPlugin = require('html-webpack-plugin');
-const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-const project = require('../project.config');
+const path = require("path");
+const webpack = require("webpack");
+const HtmlWebpackPlugin = require("html-webpack-plugin");
+const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+const project = require("../project.config");
 
-const resolveProject = (...parts) => path.resolve(__dirname, '..', ...parts);
-const production = process.env.GITHUB_PAGES === 'true';
-const publicPath = production ? project.site.basePath : '/';
+const resolveProject = (...parts) => path.resolve(__dirname, "..", ...parts);
+const production = process.env.GITHUB_PAGES === "true";
+const publicPath = production ? project.site.basePath : "/";
 
 function pageTemplate(page, jsonLd) {
   return {
     project,
     page,
-    jsonLd: JSON.stringify(jsonLd).replace(/</g, '\\u003c'),
+    jsonLd: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
     publicPath,
     production,
   };
 }
 
 module.exports = {
-  mode: production ? 'production' : 'development',
-  target: ['web', 'es2018'],
-  devtool: production ? 'source-map' : 'eval-cheap-module-source-map',
+  mode: production ? "production" : "development",
+  target: [ "web", "es2018" ],
+  devtool: production ? "source-map" : "eval-cheap-module-source-map",
   entry: {
     shared: {
       import: [
-        resolveProject('site/shared.ts'),
-        ...project.assets.files.map((file) => resolveProject('images', file)),
+        resolveProject("site/shared.ts"),
+        ...project.assets.files.map((file) => resolveProject("images", file)),
       ],
     },
     home: {
-      import: resolveProject('site/index.ts'),
-      dependOn: 'shared',
+      import: resolveProject("site/index.ts"),
+      dependOn: "shared",
     },
     playground: {
-      import: resolveProject('examples/index.ts'),
-      dependOn: 'shared',
+      import: resolveProject("examples/index.ts"),
+      dependOn: "shared",
     },
     api: {
-      import: resolveProject('site/api.ts'),
+      import: resolveProject("site/api.ts"),
     },
   },
   output: {
     clean: true,
-    filename: 'assets/[name].js',
-    path: resolveProject('dist-dev'),
+    filename: "assets/[name].js",
+    path: resolveProject("dist-dev"),
     publicPath,
   },
   devServer: {
-    host: '127.0.0.1',
+    host: "127.0.0.1",
     port: 8080,
-    static: { directory: resolveProject('dist-dev') },
+    static: { directory: resolveProject("dist-dev") },
     historyApiFallback: {
-      rewrites: [{ from: /^\/playground\/?$/, to: '/playground/index.html' }],
+      rewrites: [ { from: /^\/playground\/?$/, to: "/playground/index.html" } ],
     },
   },
   module: {
@@ -60,19 +60,19 @@ module.exports = {
       {
         test: /\.tsx?$/,
         use: {
-          loader: 'ts-loader',
-          options: { configFile: resolveProject('tsconfig.site.json') },
+          loader: "ts-loader",
+          options: { configFile: resolveProject("tsconfig.site.json") },
         },
         exclude: /node_modules/,
       },
       {
         test: /\.css$/,
-        use: [MiniCssExtractPlugin.loader, 'css-loader'],
+        use: [ MiniCssExtractPlugin.loader, "css-loader" ],
       },
       {
         test: /\.(?:png|jpe?g)$/i,
-        type: 'asset/resource',
-        generator: { filename: 'images/[name][ext]' },
+        type: "asset/resource",
+        generator: { filename: "images/[name][ext]" },
       },
     ],
   },
@@ -91,26 +91,26 @@ module.exports = {
       }),
     }),
     new MiniCssExtractPlugin({
-      filename: 'assets/[name].css',
+      filename: "assets/[name].css",
     }),
     new HtmlWebpackPlugin({
-      filename: 'index.html',
-      template: resolveProject('site/index.html'),
-      chunks: ['shared', 'home'],
+      filename: "index.html",
+      template: resolveProject("site/index.html"),
+      chunks: [ "shared", "home" ],
       templateParameters: pageTemplate(
         project.site.pages.home,
-        project.seo.rootJsonLd
+        project.seo.rootJsonLd,
       ),
     }),
     new HtmlWebpackPlugin({
-      filename: 'playground/index.html',
-      template: resolveProject('examples/index.html'),
-      chunks: ['shared', 'playground'],
+      filename: "playground/index.html",
+      template: resolveProject("examples/index.html"),
+      chunks: [ "shared", "playground" ],
       templateParameters: pageTemplate(
         project.site.pages.playground,
-        project.seo.playgroundJsonLd
+        project.seo.playgroundJsonLd,
       ),
     }),
   ],
-  resolve: { extensions: ['.tsx', '.ts', '.js'] },
+  resolve: { extensions: [ ".tsx", ".ts", ".js" ] },
 };

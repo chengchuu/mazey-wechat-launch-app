@@ -5,7 +5,7 @@
 import type {
   LAUNCH_APP_SHARE_APP_MESSAGE,
   LAUNCH_APP_SHARE_TIMELINE,
-} from './src/index';
+} from "./src/index";
 
 declare global {
   interface Window {

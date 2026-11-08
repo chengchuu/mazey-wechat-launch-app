@@ -1,4 +1,4 @@
-import type { SitePwaConfig } from './pwa';
+import type { SitePwaConfig } from "./pwa";
 
 export interface SiteRuntimeConfig {
   installCommand: string;

@@ -1,8 +1,8 @@
 /* global self, caches, fetch, URL */
 /* eslint-disable no-undef */
 
-const PROJECT_BASE = '__PWA_PROJECT_BASE__';
-const CACHE_PREFIX = '__PWA_CACHE_PREFIX__';
+const PROJECT_BASE = "__PWA_PROJECT_BASE__";
+const CACHE_PREFIX = "__PWA_CACHE_PREFIX__";
 const CACHE_NAME = `${CACHE_PREFIX}__PWA_CACHE_VERSION__`;
 const APP_SHELL = __PWA_APP_SHELL__;
 const APP_SHELL_PATHS = new Set(APP_SHELL);
@@ -12,18 +12,18 @@ function canCache(response) {
   return (
     response.ok &&
     response.status === 200 &&
-    response.type !== 'opaque' &&
-    response.type !== 'opaqueredirect'
+    response.type !== "opaque" &&
+    response.type !== "opaqueredirect"
   );
 }
 
 function isProjectRequest(request) {
   const url = new URL(request.url);
   return (
-    request.method === 'GET' &&
+    request.method === "GET" &&
     url.origin === self.location.origin &&
     url.pathname.startsWith(PROJECT_BASE) &&
-    !url.pathname.endsWith('.map')
+    !url.pathname.endsWith(".map")
   );
 }
 
@@ -36,7 +36,7 @@ async function trimCache(cache) {
   await Promise.all(
     runtimeKeys
       .slice(0, Math.max(0, runtimeKeys.length - MAX_RUNTIME_CACHE_ENTRIES))
-      .map((key) => cache.delete(key))
+      .map((key) => cache.delete(key)),
   );
 }
 
@@ -68,7 +68,7 @@ async function networkFirst(request) {
   } catch (error) {
     const cached = await matchCurrentCache(request);
     if (cached) return cached;
-    if (request.mode === 'navigate') {
+    if (request.mode === "navigate") {
       const home = await matchCurrentCache(PROJECT_BASE);
       if (home) return home;
     }
@@ -88,25 +88,25 @@ async function cacheAppShell() {
   const cache = await caches.open(CACHE_NAME);
   const results = await Promise.allSettled(
     APP_SHELL.map(async (url) => {
-      const response = await fetch(url, { cache: 'reload' });
+      const response = await fetch(url, { cache: "reload" });
       if (!canCache(response)) {
         throw new Error(`Cannot precache ${url}: HTTP ${response.status}`);
       }
       await cache.put(url, response);
-    })
+    }),
   );
-  const failure = results.find((result) => result.status === 'rejected');
-  if (failure?.status === 'rejected') {
+  const failure = results.find((result) => result.status === "rejected");
+  if (failure?.status === "rejected") {
     await caches.delete(CACHE_NAME).catch(() => undefined);
     throw failure.reason;
   }
 }
 
-self.addEventListener('install', (event) => {
+self.addEventListener("install", (event) => {
   event.waitUntil(cacheAppShell());
 });
 
-self.addEventListener('activate', (event) => {
+self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches
       .keys()
@@ -114,23 +114,23 @@ self.addEventListener('activate', (event) => {
         Promise.all(
           names
             .filter(
-              (name) => name.startsWith(CACHE_PREFIX) && name !== CACHE_NAME
+              (name) => name.startsWith(CACHE_PREFIX) && name !== CACHE_NAME,
             )
-            .map((name) => caches.delete(name))
-        )
+            .map((name) => caches.delete(name)),
+        ),
       )
-      .then(() => self.clients.claim())
+      .then(() => self.clients.claim()),
   );
 });
 
-self.addEventListener('fetch', (event) => {
+self.addEventListener("fetch", (event) => {
   const { request } = event;
   if (!isProjectRequest(request)) return;
 
   const isDocument =
-    request.mode === 'navigate' || request.destination === 'document';
-  const needsFreshness = ['script', 'style'].includes(request.destination);
-  const isCacheFirstAsset = ['font', 'image'].includes(request.destination);
+    request.mode === "navigate" || request.destination === "document";
+  const needsFreshness = [ "script", "style" ].includes(request.destination);
+  const isCacheFirstAsset = [ "font", "image" ].includes(request.destination);
 
   if (isDocument || needsFreshness) event.respondWith(networkFirst(request));
   else if (isCacheFirstAsset) event.respondWith(cacheFirst(request));

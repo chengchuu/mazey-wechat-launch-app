@@ -1,11 +1,11 @@
-const { parseGitHubRepository, toJavaScriptGlobalName } = require('mazey');
+const { parseGitHubRepository, toJavaScriptGlobalName } = require("mazey");
 
 function packageDetails(pkg) {
-  if (typeof pkg.name !== 'string' || !pkg.name.trim()) {
-    throw new Error('package.json must define a package name');
+  if (typeof pkg.name !== "string" || !pkg.name.trim()) {
+    throw new Error("package.json must define a package name");
   }
 
-  const bundleBaseName = pkg.name.split('/').filter(Boolean).at(-1);
+  const bundleBaseName = pkg.name.split("/").filter(Boolean).at(-1);
   return {
     name: pkg.name,
     version: pkg.version,
@@ -18,9 +18,9 @@ function packageDetails(pkg) {
 }
 
 function repositoryDetails(repository) {
-  const rawUrl = typeof repository === 'string' ? repository : repository?.url;
-  if (typeof rawUrl !== 'string' || !rawUrl.trim()) {
-    throw new Error('package.json must define a GitHub repository URL');
+  const rawUrl = typeof repository === "string" ? repository : repository?.url;
+  if (typeof rawUrl !== "string" || !rawUrl.trim()) {
+    throw new Error("package.json must define a GitHub repository URL");
   }
   try {
     return parseGitHubRepository(rawUrl);
