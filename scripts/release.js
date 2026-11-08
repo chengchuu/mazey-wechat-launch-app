@@ -1,4 +1,4 @@
 // release
-const { release } = require('mazey/scripts/git-helper.js');
+const { release } = require("mazey/scripts/git-helper.js");
 
-release(undefined, { defaultBranch: 'main' });
+release(undefined, { defaultBranch: "main" });

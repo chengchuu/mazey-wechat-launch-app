@@ -3,9 +3,9 @@ import {
   generateRndNum,
   addStyle,
   getQueryParam,
-} from 'mazey';
-import $ from 'jquery';
-import sha1 from 'js-sha1';
+} from "mazey";
+import $ from "jquery";
+import sha1 from "js-sha1";
 
 export interface UpdateTimelineShareDataOptions {
   title: string;
@@ -43,11 +43,11 @@ export interface MenuShareAppMessageOptions {
 }
 
 export type LAUNCH_APP_SHARE_TIMELINE = (
-  options: UpdateTimelineShareDataOptions | MenuShareTimelineOptions
+  options: UpdateTimelineShareDataOptions | MenuShareTimelineOptions,
 ) => void;
 
 export type LAUNCH_APP_SHARE_APP_MESSAGE = (
-  options: UpdateAppMessageShareDataOptions | MenuShareAppMessageOptions
+  options: UpdateAppMessageShareDataOptions | MenuShareAppMessageOptions,
 ) => void;
 
 export interface retVal {
@@ -97,20 +97,20 @@ type DefaultOptions = { [K in keyof LaunchAppOptions]-?: LaunchAppOptions[K] };
 
 // Defaults intentionally persist across factory calls.
 const defaultOptions: DefaultOptions = {
-  weixinJsSdkTicket: '',
-  launchContainerQuery: '.mazey-launch-app-selector',
-  launchShowWeixinToBrowserImgUrl: '',
+  weixinJsSdkTicket: "",
+  launchContainerQuery: ".mazey-launch-app-selector",
+  launchShowWeixinToBrowserImgUrl: "",
   canShowWeixinToBrowser: false,
-  extInfo: '',
-  serviceAccountAppId: '',
-  wexinServiceAccountAppId: '', // Alias, same as serviceAccountAppId, will be deprecated. But still works. Compatible with old version.
-  openPlatformMobileAppId: '',
-  genTagPrefixStr: 'mazey-launch-app-btn-prefix-',
-  launchShowWeixinToBrowserClassName: 'mazey-launch-app-wx-to-browser',
-  launchBtnClassName: 'mazey-launch-app-inner-btn',
-  launchBtnStyle: '', // 'top:0;right:0;bottom:0;left:0;' +
-  launchBtnText: 'Launch App <br /><br /><br />',
-  launchErrorLink: '',
+  extInfo: "",
+  serviceAccountAppId: "",
+  wexinServiceAccountAppId: "", // Alias, same as serviceAccountAppId, will be deprecated. But still works. Compatible with old version.
+  openPlatformMobileAppId: "",
+  genTagPrefixStr: "mazey-launch-app-btn-prefix-",
+  launchShowWeixinToBrowserClassName: "mazey-launch-app-wx-to-browser",
+  launchBtnClassName: "mazey-launch-app-inner-btn",
+  launchBtnStyle: "", // 'top:0;right:0;bottom:0;left:0;' +
+  launchBtnText: "Launch App <br /><br /><br />",
+  launchErrorLink: "",
   canContinuousUpdating: false,
   onMenuShareTimelineOptions: undefined,
   onMenuShareAppMessageOptions: undefined,
@@ -118,7 +118,7 @@ const defaultOptions: DefaultOptions = {
   updateAppMessageShareDataOptions: undefined,
   isConClosed: true,
   isWxDebug: false,
-  openTagList: ['wx-open-launch-app'],
+  openTagList: [ "wx-open-launch-app" ],
   canLaunchApp: () => true,
   canFireErrorLinkDirectly: () => false,
   launchBtnClick: () => undefined,
@@ -159,22 +159,22 @@ export default (options: LaunchAppOptions = defaultOptions): retVal => {
     launchReady,
   } = _options;
   let { serviceAccountAppId, extInfo } = _options;
-  const LaunchCon = genCustomConsole('LaunchCon:', {
+  const LaunchCon = genCustomConsole("LaunchCon:", {
     isClosed: isConClosed,
   });
   const wx = window.wx;
   if (!wx) {
-    console.error('Launch App: wx is not found');
+    console.error("Launch App: wx is not found");
   }
   let batchGenerateWxTagFn: () => void = () => undefined;
-  LaunchCon.log('Launch App');
+  LaunchCon.log("Launch App");
 
   const defaultShareOptions = {
     title: document.title,
     link: location.href,
-    imgUrl: '',
+    imgUrl: "",
   };
-  const defaultMessageOptions = { ...defaultShareOptions, desc: '' };
+  const defaultMessageOptions = { ...defaultShareOptions, desc: "" };
   let sdkReady = false;
   let timelineOptions =
     updateTimelineShareDataOptions !== undefined
@@ -214,25 +214,25 @@ export default (options: LaunchAppOptions = defaultOptions): retVal => {
   };
   window.LAUNCH_APP_SHARE_TIMELINE = LAUNCH_APP_SHARE_TIMELINE;
   window.LAUNCH_APP_SHARE_APP_MESSAGE = LAUNCH_APP_SHARE_APP_MESSAGE;
-  const genLaunchBtn = (content = '', extStyle = '', tagName = 'button') => {
+  const genLaunchBtn = (content = "", extStyle = "", tagName = "button") => {
     const str =
       `<style>.${launchBtnClassName}{` +
-      'opacity: 0;' +
-      'width: 100%;' +
-      'height: 100%;' +
-      'backgroud: transparent;' +
-      'color: #300f54;' +
-      'border: none;' +
-      'box-sizing: border-box;' +
-      'text-align: center;' +
-      'vertical-align: middle;' +
+      "opacity: 0;" +
+      "width: 100%;" +
+      "height: 100%;" +
+      "backgroud: transparent;" +
+      "color: #300f54;" +
+      "border: none;" +
+      "box-sizing: border-box;" +
+      "text-align: center;" +
+      "vertical-align: middle;" +
       launchBtnStyle +
       extStyle +
-      '}</style>' +
+      "}</style>" +
       `<${tagName} class="${launchBtnClassName}"` +
-      (content && tagName === 'button' ? ` onclick="${content}"` : '') +
-      (content && tagName === 'a' ? ` target="_self" href="${content}"` : '') +
-      '>' +
+      (content && tagName === "button" ? ` onclick="${content}"` : "") +
+      (content && tagName === "a" ? ` target="_self" href="${content}"` : "") +
+      ">" +
       launchBtnText +
       `</${tagName}>`;
     return str;
@@ -240,23 +240,23 @@ export default (options: LaunchAppOptions = defaultOptions): retVal => {
   const launchBtn = genLaunchBtn();
 
   function renderWXOpenLaunchApp(
-    serviceAccountAppId = '',
-    openPlatformMobileAppId = ''
+    serviceAccountAppId = "",
+    openPlatformMobileAppId = "",
   ) {
-    LaunchCon.log('renderWXOpenLaunchApp');
+    LaunchCon.log("renderWXOpenLaunchApp");
     sdkReady = false;
 
-    return Promise.all([getTicket(), loadSha1()])
+    return Promise.all([ getTicket(), loadSha1() ])
       .then((allRes) => {
-        LaunchCon.log('allRes', allRes);
+        LaunchCon.log("allRes", allRes);
         const ticket = allRes[0];
         if (!ticket) {
-          LaunchCon.error('weixinJsSdkTicket is required');
+          LaunchCon.error("weixinJsSdkTicket is required");
           return;
         }
         const sha1 = allRes[1];
         if (!sha1) {
-          LaunchCon.error('sha1 is required');
+          LaunchCon.error("sha1 is required");
           return;
         }
         const noncestr = generateRndNum(7);
@@ -264,13 +264,13 @@ export default (options: LaunchAppOptions = defaultOptions): retVal => {
         const timestamp = new Date().getTime();
         const url = location.href;
         const string1 =
-          'jsapi_ticket=' +
+          "jsapi_ticket=" +
           jsapi_ticket +
-          '&noncestr=' +
+          "&noncestr=" +
           noncestr +
-          '&timestamp=' +
+          "&timestamp=" +
           timestamp +
-          '&url=' +
+          "&url=" +
           url;
         const signature = sha1(string1);
         wx.config({
@@ -280,9 +280,9 @@ export default (options: LaunchAppOptions = defaultOptions): retVal => {
           nonceStr: noncestr, // 必填，生成签名的随机串
           signature: signature, // 必填，签名
           jsApiList: [
-            'showOptionMenu',
-            'updateTimelineShareData',
-            'updateAppMessageShareData',
+            "showOptionMenu",
+            "updateTimelineShareData",
+            "updateAppMessageShareData",
           ], // 必填，需要使用的 JS 接口列表
           openTagList, // 可选，需要使用的开放标签列表
         });
@@ -294,7 +294,7 @@ export default (options: LaunchAppOptions = defaultOptions): retVal => {
           // Launch App
           if (!openPlatformMobileAppId) {
             LaunchCon.log(
-              'openPlatformMobileAppId is required for weixin launch app'
+              "openPlatformMobileAppId is required for weixin launch app",
             );
             return;
           }
@@ -303,20 +303,20 @@ export default (options: LaunchAppOptions = defaultOptions): retVal => {
           const batchGenerateWxTag = () => {
             const containers = $(launchContainerQuery);
             LaunchCon.log(
-              'containers',
+              "containers",
               launchContainerQuery,
               containers,
-              containers.length
+              containers.length,
             );
             if (containers.length > 0) {
               containers.each(function (index: number, el: any) {
                 // Key
-                let key = $(el).attr('data-launch-app-key');
+                let key = $(el).attr("data-launch-app-key");
                 if (!key) {
-                  const keyEle = $(el).parents('[data-launch-app-key]:eq(0)');
+                  const keyEle = $(el).parents("[data-launch-app-key]:eq(0)");
                   if (keyEle.length > 0) {
-                    key = keyEle.attr('data-launch-app-key');
-                    LaunchCon.log('keyEle', keyEle, key);
+                    key = keyEle.attr("data-launch-app-key");
+                    LaunchCon.log("keyEle", keyEle, key);
                   }
                 }
                 if (!key) {
@@ -325,17 +325,17 @@ export default (options: LaunchAppOptions = defaultOptions): retVal => {
                 const positionDomClass = `mazey-launch-app-tag-${key}`;
                 const tag = $(`.${positionDomClass} wx-open-launch-app`);
                 // Ext Info
-                let eleExtInfo = $(el).attr('data-launch-app-ext-info');
+                let eleExtInfo = $(el).attr("data-launch-app-ext-info");
                 if (!eleExtInfo) {
                   const eleExtInfoEle = $(el).parents(
-                    '[data-launch-app-ext-info]:eq(0)'
+                    "[data-launch-app-ext-info]:eq(0)",
                   );
                   if (eleExtInfoEle.length > 0) {
-                    eleExtInfo = eleExtInfoEle.attr('data-launch-app-ext-info');
+                    eleExtInfo = eleExtInfoEle.attr("data-launch-app-ext-info");
                     LaunchCon.log(
-                      'eleExtInfoEle parents',
+                      "eleExtInfoEle parents",
                       eleExtInfoEle,
-                      eleExtInfo
+                      eleExtInfo,
                     );
                   }
                 }
@@ -343,19 +343,19 @@ export default (options: LaunchAppOptions = defaultOptions): retVal => {
                   extInfo = eleExtInfo;
                 }
                 // Error Link
-                let eleErrorLink = $(el).attr('data-launch-app-error-link');
+                let eleErrorLink = $(el).attr("data-launch-app-error-link");
                 if (!eleErrorLink) {
                   const eleErrorLinkEle = $(el).parents(
-                    '[data-launch-app-error-link]:eq(0)'
+                    "[data-launch-app-error-link]:eq(0)",
                   );
                   if (eleErrorLinkEle.length > 0) {
                     eleErrorLink = eleErrorLinkEle.attr(
-                      'data-launch-app-error-link'
+                      "data-launch-app-error-link",
                     );
                     LaunchCon.log(
-                      'eleErrorLinkEle parents',
+                      "eleErrorLinkEle parents",
                       eleErrorLinkEle,
-                      eleErrorLink
+                      eleErrorLink,
                     );
                   }
                 }
@@ -367,7 +367,7 @@ export default (options: LaunchAppOptions = defaultOptions): retVal => {
                   const prefix = genTagPrefixStr;
                   const positionDomId = prefix + positionDomClass;
                   const tagStr =
-                    '<wx-open-launch-app' +
+                    "<wx-open-launch-app" +
                     " id='" +
                     positionDomId +
                     "' appid='" +
@@ -375,29 +375,29 @@ export default (options: LaunchAppOptions = defaultOptions): retVal => {
                     `' extinfo='${extInfo}` +
                     "'" +
                     " style='z-index:99;position:absolute;width:100%;height:100%;opacity:1;background:transparent;overflow:hidden;left:0;'" +
-                    '>' +
+                    ">" +
                     "<script type='text/wxtag-template'>" +
                     launchBtn +
-                    '</script>' +
-                    '</wx-open-launch-app>';
-                  $('.' + positionDomClass + ':eq(0)').append(tagStr);
+                    "</script>" +
+                    "</wx-open-launch-app>";
+                  $("." + positionDomClass + ":eq(0)").append(tagStr);
                   const mazeyLaunchBtn = document.getElementById(positionDomId);
                   if (mazeyLaunchBtn) {
-                    mazeyLaunchBtn.addEventListener('ready', function (e) {
+                    mazeyLaunchBtn.addEventListener("ready", function (e) {
                       // Ready
-                      LaunchCon.log('ready event', e);
+                      LaunchCon.log("ready event", e);
                     });
                     mazeyLaunchBtn.addEventListener(
-                      'launch',
+                      "launch",
                       function (e: any) {
                         // Launch
-                        LaunchCon.log('launch event', e);
+                        LaunchCon.log("launch event", e);
                         if (e.detail && e.detail.extInfo) {
-                          LaunchCon.log('launch extInfo', e.detail.extInfo);
+                          LaunchCon.log("launch extInfo", e.detail.extInfo);
                         }
-                      }
+                      },
                     );
-                    mazeyLaunchBtn.addEventListener('error', function (e: any) {
+                    mazeyLaunchBtn.addEventListener("error", function (e: any) {
                       // Error
                       LaunchCon.error(e.detail);
                       // Prefix
@@ -406,19 +406,19 @@ export default (options: LaunchAppOptions = defaultOptions): retVal => {
                         launchShowWeixinToBrowser();
                       }
                       if (realErrorLink) {
-                        LaunchCon.log('realErrorLink', realErrorLink);
+                        LaunchCon.log("realErrorLink", realErrorLink);
                         location.href = realErrorLink;
                       }
                     });
-                    mazeyLaunchBtn.addEventListener('click', function (e) {
-                      LaunchCon.log('click event', e);
+                    mazeyLaunchBtn.addEventListener("click", function (e) {
+                      LaunchCon.log("click event", e);
                       launchBtnClick && launchBtnClick();
                     });
                   }
                 };
                 if (tag.length === 0) {
                   $(el).addClass(positionDomClass);
-                  LaunchCon.log('success:', positionDomClass);
+                  LaunchCon.log("success:", positionDomClass);
                   genTag(positionDomClass);
                 }
               });
@@ -430,7 +430,7 @@ export default (options: LaunchAppOptions = defaultOptions): retVal => {
         wx.error(function (res: any) {
           LaunchCon.error(res);
         });
-        return 'success:launch_app';
+        return "success:launch_app";
       })
       .catch((err) => {
         LaunchCon.error(err);
@@ -439,59 +439,59 @@ export default (options: LaunchAppOptions = defaultOptions): retVal => {
 
   function launchShowWeixinToBrowser() {
     const styleStr =
-      '.mazey-launch-app-mask{' +
-      'position:fixed;' +
-      'top:0;right:0;bottom:0;left:0;' +
-      'background-color:rgba(0, 0, 0, .5);' +
-      'text-align:right;' +
-      'font-size:0;' +
-      'white-space:nowrap;' +
-      'overflow:auto;' +
-      'z-index:999;' +
-      '}' +
-      '.mazey-launch-app-img{' +
-      'display:inline-block;' +
-      'vertical-align:middle;' +
-      'text-align:left;' +
-      'font-size:14px;' +
-      'white-space:normal;' +
-      'width:50vw;' +
-      'margin:0.5rem 0.5rem 0 0;' +
-      '}' +
-      '.mazey-launch-app-img:after{' +
-      'content:"";' +
-      'display:inline-block;' +
-      'height:100%;' +
-      'vertical-align:middle;' +
-      '}';
+      ".mazey-launch-app-mask{" +
+      "position:fixed;" +
+      "top:0;right:0;bottom:0;left:0;" +
+      "background-color:rgba(0, 0, 0, .5);" +
+      "text-align:right;" +
+      "font-size:0;" +
+      "white-space:nowrap;" +
+      "overflow:auto;" +
+      "z-index:999;" +
+      "}" +
+      ".mazey-launch-app-img{" +
+      "display:inline-block;" +
+      "vertical-align:middle;" +
+      "text-align:left;" +
+      "font-size:14px;" +
+      "white-space:normal;" +
+      "width:50vw;" +
+      "margin:0.5rem 0.5rem 0 0;" +
+      "}" +
+      ".mazey-launch-app-img:after{" +
+      "content:\"\";" +
+      "display:inline-block;" +
+      "height:100%;" +
+      "vertical-align:middle;" +
+      "}";
     addStyle(styleStr, {
-      id: 'mazey-launch-app-mask-style',
+      id: "mazey-launch-app-mask-style",
     });
     if (!window.LAUNCH_APP_HIDE_WEIXIN_BROWSER) {
       window.LAUNCH_APP_HIDE_WEIXIN_BROWSER = function () {
-        $('.mazey-launch-app-mask').hide();
+        $(".mazey-launch-app-mask").hide();
       };
     }
-    if ($('.mazey-launch-app-mask').length === 0) {
-      $('body').append(
+    if ($(".mazey-launch-app-mask").length === 0) {
+      $("body").append(
         "<div class='mazey-launch-app-mask' onclick='window.LAUNCH_APP_HIDE_WEIXIN_BROWSER()'>" +
-          '<img ' +
+          "<img " +
           `class='mazey-launch-app-img ${launchShowWeixinToBrowserClassName}' ` +
           `src='${launchShowWeixinToBrowserImgUrl}' ` +
           "alt='Launch App' " +
-          '/>' +
-          '</div>'
+          "/>" +
+          "</div>",
       );
     } else {
-      $('.mazey-launch-app-mask').show();
+      $(".mazey-launch-app-mask").show();
     }
   }
 
   function renderWeixinLaunchTemplate() {
-    LaunchCon.log('renderWeixinLaunchTemplate');
+    LaunchCon.log("renderWeixinLaunchTemplate");
     if (!serviceAccountAppId && wexinServiceAccountAppId) {
       console.warn(
-        'wexinServiceAccountAppId will be deprecated, use serviceAccountAppId instead.'
+        "wexinServiceAccountAppId will be deprecated, use serviceAccountAppId instead.",
       );
       serviceAccountAppId = wexinServiceAccountAppId;
     }
@@ -506,8 +506,8 @@ export default (options: LaunchAppOptions = defaultOptions): retVal => {
     return Promise.resolve(
       weixinJsSdkTicket ||
         window.LAUNCH_APP_WEIXIN_JS_SDK_TICKET ||
-        getQueryParam('weixinJsSdkTicket') ||
-        ''
+        getQueryParam("weixinJsSdkTicket") ||
+        "",
     );
   }
 
@@ -517,7 +517,7 @@ export default (options: LaunchAppOptions = defaultOptions): retVal => {
   }
 
   function appUpdated(data: any = {}) {
-    LaunchCon.log('appUpdated', data);
+    LaunchCon.log("appUpdated", data);
     if (!window.LAUNCH_APP_LOAD && canLaunchApp(data)) {
       renderWeixinLaunchTemplate();
       window.LAUNCH_APP_LOAD = true;
@@ -530,29 +530,29 @@ export default (options: LaunchAppOptions = defaultOptions): retVal => {
       const containers = $(launchContainerQuery);
       if (containers.length > 0) {
         containers.each(function (index: number, el: any) {
-          const c = $(el).children('.' + launchBtnClassName);
+          const c = $(el).children("." + launchBtnClassName);
           if (c && c.length) {
             return;
           }
           // Error Link
-          let eleErrorLink = $(el).attr('data-launch-app-error-link');
+          let eleErrorLink = $(el).attr("data-launch-app-error-link");
           if (!eleErrorLink) {
             const eleErrorLinkEle = $(el).parents(
-              '[data-launch-app-error-link]:eq(0)'
+              "[data-launch-app-error-link]:eq(0)",
             );
             if (eleErrorLinkEle.length > 0) {
-              eleErrorLink = eleErrorLinkEle.attr('data-launch-app-error-link');
+              eleErrorLink = eleErrorLinkEle.attr("data-launch-app-error-link");
             }
           }
           if (
             eleErrorLink &&
-            typeof eleErrorLink === 'string' &&
+            typeof eleErrorLink === "string" &&
             eleErrorLink.length
           ) {
             const launchBtn = genLaunchBtn(
               eleErrorLink,
-              'position:absolute;left:0;z-index:999;',
-              'a'
+              "position:absolute;left:0;z-index:999;",
+              "a",
             );
             $(el).append(launchBtn);
           }
@@ -562,7 +562,7 @@ export default (options: LaunchAppOptions = defaultOptions): retVal => {
   }
 
   function appBeforeDestroy() {
-    LaunchCon.log('appBeforeDestroy', appBeforeDestroy);
+    LaunchCon.log("appBeforeDestroy", appBeforeDestroy);
     destroyWeixinLaunchEvent();
   }
 

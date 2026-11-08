@@ -1,31 +1,33 @@
-import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
-import path, { dirname } from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
-import projectConfig from '../project.config.js';
-import { pngDimensions } from './validate-pwa.mjs';
+import {
+  existsSync, readFileSync, readdirSync, statSync, 
+} from "node:fs";
+import path, { dirname } from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
+import projectConfig from "../project.config.js";
+import { jpegDimensions, pngDimensions } from "./validate-pwa.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const sitePages = projectConfig.site.pages;
 
-const root = path.resolve(__dirname, '..');
-const docs = path.join(root, 'docs');
+const root = path.resolve(__dirname, "..");
+const docs = path.join(root, "docs");
 const failures = [];
 const themeIconPaths = Object.fromEntries(
   [
-    ['light', 'sun-fill.svg'],
-    ['dark', 'moon-stars-fill.svg'],
-  ].map(([theme, file]) => {
+    [ "light", "sun-fill.svg" ],
+    [ "dark", "moon-stars-fill.svg" ],
+  ].map(([ theme, file ]) => {
     const svg = readFileSync(
-      path.join(root, 'node_modules', 'bootstrap-icons', 'icons', file),
-      'utf8'
+      path.join(root, "node_modules", "bootstrap-icons", "icons", file),
+      "utf8",
     );
     return [
       theme,
       matches(svg, /<path\b[^>]*\bd=["']([^"']+)["'][^>]*>/gi).map(
-        (match) => match[1]
+        (match) => match[1],
       ),
     ];
-  })
+  }),
 );
 
 function fail(message) {
@@ -33,20 +35,20 @@ function fail(message) {
 }
 
 function matches(html, expression) {
-  return [...html.matchAll(expression)];
+  return [ ...html.matchAll(expression) ];
 }
 
 function attributes(tag) {
   return Object.fromEntries(
     matches(tag, /([:\w-]+)(?:=["']([^"']*)["'])?/g).map((item) => [
       item[1].toLowerCase(),
-      item[2] ?? '',
-    ])
+      item[2] ?? "",
+    ]),
   );
 }
 
 function attribute(html, tag, name, value) {
-  const tags = matches(html, new RegExp(`<${tag}\\b[^>]*>`, 'gi'));
+  const tags = matches(html, new RegExp(`<${tag}\\b[^>]*>`, "gi"));
   for (const match of tags) {
     const values = attributes(match[0]);
     if (values[name] === value) return values;
@@ -56,11 +58,11 @@ function attribute(html, tag, name, value) {
 
 function visibleText(html) {
   return html
-    .replace(/<script\b[\s\S]*?<\/script>/gi, ' ')
-    .replace(/<style\b[\s\S]*?<\/style>/gi, ' ')
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/&(?:nbsp|amp|lt|gt|quot|#39);/g, ' ')
-    .replace(/\s+/g, ' ')
+    .replace(/<script\b[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style\b[\s\S]*?<\/style>/gi, " ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&(?:nbsp|amp|lt|gt|quot|#39);/g, " ")
+    .replace(/\s+/g, " ")
     .trim();
 }
 
@@ -68,47 +70,75 @@ const embeddedMarkupExpression =
   /<!--[\s\S]*?-->|<script\b[\s\S]*?<\/script>|<style\b[\s\S]*?<\/style>/gi;
 
 function elementIds(html) {
-  const markup = html.replace(embeddedMarkupExpression, '');
+  const markup = html.replace(embeddedMarkupExpression, "");
   return matches(markup, /<[a-z][^>]*>/gi).flatMap((match) => {
     const values = attributes(match[0]);
-    return Object.hasOwn(values, 'id') ? [values.id] : [];
+    return Object.hasOwn(values, "id") ? [ values.id ] : [];
   });
 }
 
 function validateSocialImage(label, html) {
   const image = projectConfig.seo.openGraphImage;
   const openGraphValues = {
-    'og:image': image.url,
-    'og:image:type': image.type,
-    'og:image:width': String(image.width),
-    'og:image:height': String(image.height),
-    'og:image:alt': image.alt,
+    "og:image": image.url,
+    "og:image:type": image.type,
+    "og:image:width": String(image.width),
+    "og:image:height": String(image.height),
+    "og:image:alt": image.alt,
   };
-  for (const [property, expected] of Object.entries(openGraphValues)) {
-    if (attribute(html, 'meta', 'property', property)?.content !== expected)
+  for (const [ property, expected ] of Object.entries(openGraphValues)) {
+    if (attribute(html, "meta", "property", property)?.content !== expected)
       fail(`${label}: ${property} must be ${expected}`);
   }
   if (
-    attribute(html, 'meta', 'name', 'twitter:card')?.content !==
-    'summary_large_image'
+    attribute(html, "meta", "name", "twitter:card")?.content !==
+    "summary_large_image"
   )
     fail(`${label}: twitter:card must be summary_large_image`);
-  if (attribute(html, 'meta', 'name', 'twitter:image')?.content !== image.url)
+  if (attribute(html, "meta", "name", "twitter:image")?.content !== image.url)
     fail(`${label}: twitter:image must be ${image.url}`);
   if (
-    attribute(html, 'meta', 'name', 'twitter:image:alt')?.content !== image.alt
+    attribute(html, "meta", "name", "twitter:image:alt")?.content !== image.alt
   )
     fail(`${label}: twitter:image:alt must match the Open Graph image alt`);
 }
 
+function validateIcons(label, html) {
+  for (const [ rel, href, type, sizes ] of [
+    [
+      "icon",
+      projectConfig.assets.faviconUrl,
+      projectConfig.assets.faviconType,
+      null,
+    ],
+    [
+      "apple-touch-icon",
+      projectConfig.assets.appleTouchIconUrl,
+      null,
+      `${projectConfig.assets.appleTouchIconSize}x${projectConfig.assets.appleTouchIconSize}`,
+    ],
+  ]) {
+    const links = matches(html, /<link\b[^>]*>/gi)
+      .map((match) => attributes(match[0]))
+      .filter((link) => link.rel === rel);
+    if (
+      links.length !== 1 ||
+      links[0].href !== href ||
+      (type && links[0].type !== type) ||
+      (sizes && links[0].sizes !== sizes)
+    )
+      fail(`${label}: expected one configured ${rel} link`);
+  }
+}
+
 function validateHeadingOrder(label, html) {
   const levels = matches(html, /<h([1-6])\b/gi).map((match) =>
-    Number(match[1])
+    Number(match[1]),
   );
   for (let index = 1; index < levels.length; index += 1) {
     if (levels[index] > levels[index - 1] + 1) {
       fail(
-        `${label}: heading level jumps from h${levels[index - 1]} to h${levels[index]}`
+        `${label}: heading level jumps from h${levels[index - 1]} to h${levels[index]}`,
       );
     }
   }
@@ -117,11 +147,11 @@ function validateHeadingOrder(label, html) {
 function validateJsonLd(label, html, expectedUrl) {
   const blocks = matches(
     html,
-    /<script\b[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi
+    /<script\b[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi,
   );
   if (blocks.length !== 1) {
     fail(
-      `${label}: expected exactly one JSON-LD block, found ${blocks.length}`
+      `${label}: expected exactly one JSON-LD block, found ${blocks.length}`,
     );
     return;
   }
@@ -137,7 +167,7 @@ function validateJsonLd(label, html, expectedUrl) {
 function validateThemeToggle(label, html) {
   const buttons = matches(
     html,
-    /<button\b[^>]*data-theme-toggle[^>]*>[\s\S]*?<\/button>/gi
+    /<button\b[^>]*data-theme-toggle[^>]*>[\s\S]*?<\/button>/gi,
   );
   if (buttons.length !== 1) {
     fail(`${label}: expected exactly one navbar theme button`);
@@ -145,46 +175,46 @@ function validateThemeToggle(label, html) {
   }
 
   const buttonAttributes = attributes(
-    buttons[0][0].match(/<button\b[^>]*>/i)[0]
+    buttons[0][0].match(/<button\b[^>]*>/i)[0],
   );
-  if (buttonAttributes.type !== 'button')
+  if (buttonAttributes.type !== "button")
     fail(`${label}: navbar theme button must use type=button`);
-  if (!buttonAttributes.class?.split(/\s+/).includes('theme-toggle'))
+  if (!buttonAttributes.class?.split(/\s+/).includes("theme-toggle"))
     fail(`${label}: navbar theme button must use the theme-toggle class`);
   if (
-    buttonAttributes['aria-label'] !==
-    'Current theme: Light. Switch to dark theme.'
+    buttonAttributes["aria-label"] !==
+    "Current theme: Light. Switch to dark theme."
   )
     fail(`${label}: navbar theme button has an invalid accessible label`);
-  if (Object.hasOwn(buttonAttributes, 'aria-pressed'))
+  if (Object.hasOwn(buttonAttributes, "aria-pressed"))
     fail(`${label}: navbar theme button must not use aria-pressed`);
 
   const icons = matches(buttons[0][0], /<svg\b[^>]*>[\s\S]*?<\/svg>/gi).map(
     (match) => ({
       attributes: attributes(match[0].match(/<svg\b[^>]*>/i)[0]),
       markup: match[0],
-    })
+    }),
   );
-  for (const theme of ['light', 'dark']) {
+  for (const theme of [ "light", "dark" ]) {
     const matchingIcons = icons.filter(
-      (icon) => icon.attributes['data-theme-icon'] === theme
+      (icon) => icon.attributes["data-theme-icon"] === theme,
     );
     if (matchingIcons.length !== 1) {
       fail(`${label}: expected one ${theme} theme icon`);
       continue;
     }
     const { attributes: icon, markup } = matchingIcons[0];
-    if (icon['aria-hidden'] !== 'true' || icon.focusable !== 'false')
+    if (icon["aria-hidden"] !== "true" || icon.focusable !== "false")
       fail(`${label}: ${theme} theme icon must be decorative`);
-    if (icon.width !== '16' || icon.height !== '16')
+    if (icon.width !== "16" || icon.height !== "16")
       fail(`${label}: ${theme} theme icon must be 16 by 16 pixels`);
-    if (theme === 'light' && Object.hasOwn(icon, 'hidden'))
+    if (theme === "light" && Object.hasOwn(icon, "hidden"))
       fail(`${label}: initial light theme icon must be visible`);
-    if (theme === 'dark' && !Object.hasOwn(icon, 'hidden'))
+    if (theme === "dark" && !Object.hasOwn(icon, "hidden"))
       fail(`${label}: initial dark theme icon must be hidden`);
     const paths = matches(
       markup,
-      /<path\b[^>]*\bd=["']([^"']+)["'][^>]*>/gi
+      /<path\b[^>]*\bd=["']([^"']+)["'][^>]*>/gi,
     ).map((match) => match[1]);
     if (JSON.stringify(paths) !== JSON.stringify(themeIconPaths[theme]))
       fail(`${label}: ${theme} theme icon must use Bootstrap Icons artwork`);
@@ -197,7 +227,7 @@ function validateThemeToggle(label, html) {
 function validateTypeDocThemeSelector(label, html) {
   const selectors = matches(
     html,
-    /<select\b[^>]*id=["']tsd-theme["'][^>]*>([\s\S]*?)<\/select>/gi
+    /<select\b[^>]*id=["']tsd-theme["'][^>]*>([\s\S]*?)<\/select>/gi,
   );
   if (selectors.length !== 1) {
     fail(`${label}: expected exactly one native TypeDoc theme selector`);
@@ -205,26 +235,26 @@ function validateTypeDocThemeSelector(label, html) {
   }
   const options = matches(
     selectors[0][1],
-    /<option\b[^>]*value=["']([^"']+)["'][^>]*>([\s\S]*?)<\/option>/gi
-  ).map((match) => [match[1], visibleText(match[2])]);
+    /<option\b[^>]*value=["']([^"']+)["'][^>]*>([\s\S]*?)<\/option>/gi,
+  ).map((match) => [ match[1], visibleText(match[2]) ]);
   if (
     JSON.stringify(options) !==
     JSON.stringify([
-      ['light', 'Light'],
-      ['dark', 'Dark'],
+      [ "light", "Light" ],
+      [ "dark", "Dark" ],
     ])
   )
     fail(`${label}: native TypeDoc theme options must be Light, Dark`);
 }
 
 function localFragmentError(sourceFile, href, outputRoot = docs) {
-  const hashIndex = href.indexOf('#');
+  const hashIndex = href.indexOf("#");
   if (hashIndex === -1) return null;
 
   const pathPart = href.slice(0, hashIndex);
-  if (/^[a-z][a-z\d+.-]*:/i.test(pathPart) || pathPart.startsWith('//'))
+  if (/^[a-z][a-z\d+.-]*:/i.test(pathPart) || pathPart.startsWith("//"))
     return null;
-  const queryIndex = pathPart.indexOf('?');
+  const queryIndex = pathPart.indexOf("?");
   const pathnamePart =
     queryIndex === -1 ? pathPart : pathPart.slice(0, queryIndex);
 
@@ -234,16 +264,16 @@ function localFragmentError(sourceFile, href, outputRoot = docs) {
     fragment = decodeURIComponent(href.slice(hashIndex + 1));
     const decodedPath = decodeURIComponent(pathnamePart);
     if (
-      decodedPath.startsWith('/') &&
+      decodedPath.startsWith("/") &&
       !decodedPath.startsWith(projectConfig.site.basePath)
     )
       return `fragment link leaves the Pages artifact: ${href}`;
     targetPath = decodedPath
-      ? decodedPath.startsWith('/')
+      ? decodedPath.startsWith("/")
         ? path.resolve(
-            outputRoot,
-            decodedPath.slice(projectConfig.site.basePath.length)
-          )
+          outputRoot,
+          decodedPath.slice(projectConfig.site.basePath.length),
+        )
         : path.resolve(path.dirname(sourceFile), decodedPath)
       : sourceFile;
   } catch {
@@ -252,11 +282,11 @@ function localFragmentError(sourceFile, href, outputRoot = docs) {
 
   if (!fragment) return `empty fragment link ${href}`;
   if (existsSync(targetPath) && statSync(targetPath).isDirectory())
-    targetPath = path.join(targetPath, 'index.html');
+    targetPath = path.join(targetPath, "index.html");
 
   const relativeTarget = path.relative(outputRoot, targetPath);
   if (
-    relativeTarget === '..' ||
+    relativeTarget === ".." ||
     relativeTarget.startsWith(`..${path.sep}`) ||
     path.isAbsolute(relativeTarget)
   )
@@ -264,7 +294,7 @@ function localFragmentError(sourceFile, href, outputRoot = docs) {
   if (!existsSync(targetPath))
     return `fragment document is missing for ${href}`;
 
-  const targetHtml = readFileSync(targetPath, 'utf8');
+  const targetHtml = readFileSync(targetPath, "utf8");
   const ids = elementIds(targetHtml);
   if (!ids.includes(fragment))
     return `fragment target #${fragment} is missing for ${href}`;
@@ -273,14 +303,14 @@ function localFragmentError(sourceFile, href, outputRoot = docs) {
 }
 
 function localFragmentErrors(sourceFile, html, outputRoot = docs) {
-  const markup = html.replace(embeddedMarkupExpression, '');
+  const markup = html.replace(embeddedMarkupExpression, "");
   const hrefs = new Set(
     matches(markup, /<a\b[^>]*>/gi)
       .map((match) => attributes(match[0]).href)
-      .filter((href) => href?.includes('#') && href !== '#')
+      .filter((href) => href?.includes("#") && href !== "#"),
   );
 
-  return [...hrefs]
+  return [ ...hrefs ]
     .map((href) => localFragmentError(sourceFile, href, outputRoot))
     .filter(Boolean);
 }
@@ -301,56 +331,56 @@ function validatePage({
     fail(`${label}: missing generated file ${file}`);
     return null;
   }
-  const html = readFileSync(file, 'utf8');
+  const html = readFileSync(file, "utf8");
   const titles = matches(html, /<title>([^<]*)<\/title>/gi);
   if (titles.length !== 1 || !titles[0][1].trim())
     fail(`${label}: expected exactly one non-empty title`);
-  const description = attribute(html, 'meta', 'name', 'description');
+  const description = attribute(html, "meta", "name", "description");
   if (!description?.content?.trim()) fail(`${label}: missing meta description`);
   if (titles[0]?.[1]?.trim() !== expectedTitle)
     fail(`${label}: title does not match shared site configuration`);
   if (description?.content?.trim() !== expectedDescription)
     fail(`${label}: description does not match shared site configuration`);
-  const canonicalTag = attribute(html, 'link', 'rel', 'canonical');
+  const canonicalTag = attribute(html, "link", "rel", "canonical");
   if (canonicalTag?.href !== canonical)
     fail(`${label}: canonical must be ${canonical}`);
-  const favicon = attribute(html, 'link', 'rel', 'icon');
+  const favicon = attribute(html, "link", "rel", "icon");
   if (favicon?.href !== projectConfig.assets.faviconUrl)
     fail(`${label}: favicon must be ${projectConfig.assets.faviconUrl}`);
   if (favicon?.type !== projectConfig.assets.faviconType)
     fail(`${label}: favicon type must be ${projectConfig.assets.faviconType}`);
   if (
     expectedSitemap &&
-    attribute(html, 'link', 'rel', 'sitemap')?.href !== expectedSitemap
+    attribute(html, "link", "rel", "sitemap")?.href !== expectedSitemap
   )
     fail(`${label}: sitemap link must be ${expectedSitemap}`);
-  if (!attribute(html, 'html', 'data-bs-theme', 'light'))
+  if (!attribute(html, "html", "data-bs-theme", "light"))
     fail(`${label}: missing Bootstrap color-mode default`);
   for (const property of [
-    'og:type',
-    'og:site_name',
-    'og:title',
-    'og:description',
-    'og:url',
+    "og:type",
+    "og:site_name",
+    "og:title",
+    "og:description",
+    "og:url",
   ]) {
-    if (!attribute(html, 'meta', 'property', property)?.content)
+    if (!attribute(html, "meta", "property", property)?.content)
       fail(`${label}: missing ${property}`);
   }
-  if (attribute(html, 'meta', 'property', 'og:url')?.content !== canonical)
+  if (attribute(html, "meta", "property", "og:url")?.content !== canonical)
     fail(`${label}: og:url must match canonical`);
   validateSocialImage(label, html);
   if (
-    attribute(html, 'meta', 'property', 'og:title')?.content !==
+    attribute(html, "meta", "property", "og:title")?.content !==
     titles[0]?.[1]?.trim()
   )
     fail(`${label}: og:title must match the page title`);
   if (
-    attribute(html, 'meta', 'property', 'og:description')?.content !==
+    attribute(html, "meta", "property", "og:description")?.content !==
     description?.content?.trim()
   )
     fail(`${label}: og:description must match the meta description`);
-  for (const name of ['twitter:card', 'twitter:title', 'twitter:description']) {
-    if (!attribute(html, 'meta', 'name', name)?.content)
+  for (const name of [ "twitter:card", "twitter:title", "twitter:description" ]) {
+    if (!attribute(html, "meta", "name", name)?.content)
       fail(`${label}: missing ${name}`);
   }
   const h1s = matches(html, /<h1\b[^>]*>([\s\S]*?)<\/h1>/gi);
@@ -361,7 +391,7 @@ function validatePage({
   validateHeadingOrder(label, html);
   validateJsonLd(label, html, canonical);
   for (const href of requiredLinks) {
-    if (!attribute(html, 'a', 'href', href)) {
+    if (!attribute(html, "a", "href", href)) {
       fail(`${label}: missing crawlable link to ${href}`);
       continue;
     }
@@ -370,13 +400,13 @@ function validatePage({
     fail(`${label}: ${fragmentError}`);
   const expectedStylesheets = Array.isArray(expectedCss)
     ? expectedCss
-    : [expectedCss];
+    : [ expectedCss ];
   for (const stylesheet of expectedStylesheets) {
-    if (!attribute(html, 'link', 'href', stylesheet))
+    if (!attribute(html, "link", "href", stylesheet))
       fail(`${label}: missing generated stylesheet ${stylesheet}`);
   }
   for (const script of expectedScripts) {
-    if (!attribute(html, 'script', 'src', script))
+    if (!attribute(html, "script", "src", script))
       fail(`${label}: missing generated script ${script}`);
   }
   validateThemeToggle(label, html);
@@ -395,51 +425,51 @@ function findHtml(directory) {
   return readdirSync(directory).flatMap((name) => {
     const file = path.join(directory, name);
     if (statSync(file).isDirectory()) return findHtml(file);
-    return file.endsWith('.html') ? [file] : [];
+    return file.endsWith(".html") ? [ file ] : [];
   });
 }
 
 function validateApiPages() {
-  const apiDirectory = path.join(docs, 'api');
+  const apiDirectory = path.join(docs, "api");
   if (!existsSync(apiDirectory)) return new Set();
   const canonicals = new Set();
   const titles = new Set();
   for (const file of findHtml(apiDirectory)) {
-    const html = readFileSync(file, 'utf8');
+    const html = readFileSync(file, "utf8");
     const relative = path
       .relative(apiDirectory, file)
-      .replaceAll(path.sep, '/');
-    const assetPrefix = '../'.repeat(relative.split('/').length);
-    const canonical = attribute(html, 'link', 'rel', 'canonical')?.href;
+      .replaceAll(path.sep, "/");
+    const assetPrefix = "../".repeat(relative.split("/").length);
+    const canonical = attribute(html, "link", "rel", "canonical")?.href;
     if (
       !canonical?.startsWith(sitePages.api.url) ||
-      !canonical.startsWith('https://')
+      !canonical.startsWith("https://")
     )
-      fail(`API ${relative}: invalid canonical ${canonical ?? '(missing)'}`);
+      fail(`API ${relative}: invalid canonical ${canonical ?? "(missing)"}`);
     if (canonicals.has(canonical))
       fail(`API ${relative}: duplicate canonical ${canonical}`);
     canonicals.add(canonical);
-    if (!attribute(html, 'meta', 'name', 'description'))
+    if (!attribute(html, "meta", "name", "description"))
       fail(`API ${relative}: missing description`);
-    if (attribute(html, 'meta', 'property', 'og:url')?.content !== canonical)
+    if (attribute(html, "meta", "property", "og:url")?.content !== canonical)
       fail(`API ${relative}: Open Graph URL does not match canonical`);
     validateSocialImage(`API ${relative}`, html);
     validateThemeToggle(`API ${relative}`, html);
     validateTypeDocThemeSelector(`API ${relative}`, html);
-    const favicon = attribute(html, 'link', 'rel', 'icon');
+    const favicon = attribute(html, "link", "rel", "icon");
     if (favicon?.href !== projectConfig.assets.faviconUrl)
       fail(`API ${relative}: favicon URL is incorrect`);
     if (favicon?.type !== projectConfig.assets.faviconType)
       fail(`API ${relative}: favicon type is incorrect`);
-    if (!attribute(html, 'link', 'href', `${assetPrefix}assets/api.css`))
+    if (!attribute(html, "link", "href", `${assetPrefix}assets/api.css`))
       fail(`API ${relative}: missing API theme stylesheet`);
-    if (!attribute(html, 'script', 'src', `${assetPrefix}assets/api.js`))
+    if (!attribute(html, "script", "src", `${assetPrefix}assets/api.js`))
       fail(`API ${relative}: missing API theme script`);
     for (const control of [
-      'id="tsd-search-trigger"',
-      '<dialog id="tsd-search"',
-      'id="tsd-search-input"',
-      'id="tsd-search-results"',
+      "id=\"tsd-search-trigger\"",
+      "<dialog id=\"tsd-search\"",
+      "id=\"tsd-search-input\"",
+      "id=\"tsd-search-results\"",
     ]) {
       if (!html.includes(control))
         fail(`API ${relative}: missing search dialog control ${control}`);
@@ -448,11 +478,11 @@ function validateApiPages() {
     if (h1s.length !== 1 || !visibleText(h1s[0][1]))
       fail(`API ${relative}: expected exactly one non-empty h1`);
     const firstHeading = html.match(/<h([1-6])\b/i);
-    if (firstHeading?.[1] !== '1')
+    if (firstHeading?.[1] !== "1")
       fail(`API ${relative}: first heading must be h1`);
     validateHeadingOrder(`API ${relative}`, html);
     validateJsonLd(`API ${relative}`, html, canonical);
-    if (relative !== 'index.html') {
+    if (relative !== "index.html") {
       for (const fragmentError of localFragmentErrors(file, html))
         fail(`API ${relative}: ${fragmentError}`);
     }
@@ -466,67 +496,101 @@ function validateApiPages() {
 }
 
 function validateStaticFiles() {
-  const robotsPath = path.join(docs, 'robots.txt');
-  const sitemapPath = path.join(docs, 'sitemap.xml');
-  if (existsSync(path.join(docs, 'api', 'sitemap.xml')))
-    fail('api/sitemap.xml: generated duplicate sitemap must be removed');
-  if (!existsSync(path.join(docs, '.nojekyll')))
-    fail('.nojekyll: missing from Pages artifact');
+  const robotsPath = path.join(docs, "robots.txt");
+  const sitemapPath = path.join(docs, "sitemap.xml");
+  if (existsSync(path.join(docs, "api", "sitemap.xml")))
+    fail("api/sitemap.xml: generated duplicate sitemap must be removed");
+  if (!existsSync(path.join(docs, ".nojekyll")))
+    fail(".nojekyll: missing from Pages artifact");
   for (const asset of [
-    'assets/shared.css',
-    'assets/shared.js',
-    'assets/home.js',
-    'assets/playground.js',
-    'assets/api.css',
-    'assets/api.js',
-    `images/${projectConfig.assets.faviconFile}`,
-    `images/${projectConfig.assets.logoFile}`,
-    `images/${projectConfig.seo.openGraphImage.file}`,
+    "assets/shared.css",
+    "assets/shared.js",
+    "assets/home.js",
+    "assets/playground.js",
+    "assets/api.css",
+    "assets/api.js",
+    ...projectConfig.assets.files.map((file) => `images/${file}`),
   ]) {
     if (!existsSync(path.join(docs, asset)))
       fail(`${asset}: missing from Pages artifact`);
   }
-  const openGraphImagePath = path.join(
-    docs,
-    'images',
-    projectConfig.seo.openGraphImage.file
-  );
-  if (existsSync(openGraphImagePath)) {
-    const dimensions = pngDimensions(openGraphImagePath);
-    if (
-      dimensions.width !== projectConfig.seo.openGraphImage.width ||
-      dimensions.height !== projectConfig.seo.openGraphImage.height
-    )
-      fail(
-        `Open Graph image dimensions must be ${projectConfig.seo.openGraphImage.width}x${projectConfig.seo.openGraphImage.height}, found ${dimensions.width}x${dimensions.height}`
-      );
+  const imageSizes = new Map([
+    [
+      projectConfig.assets.faviconFile,
+      [ projectConfig.assets.faviconSize, projectConfig.assets.faviconSize ],
+    ],
+    [
+      projectConfig.assets.logoFile,
+      [ projectConfig.assets.logoSize, projectConfig.assets.logoSize ],
+    ],
+    [
+      projectConfig.assets.appleTouchIconFile,
+      [
+        projectConfig.assets.appleTouchIconSize,
+        projectConfig.assets.appleTouchIconSize,
+      ],
+    ],
+    ...projectConfig.pwa.icons.map(({ file, sizes }) => [
+      file,
+      sizes.split("x").map(Number),
+    ]),
+    [
+      projectConfig.seo.openGraphImage.file,
+      [
+        projectConfig.seo.openGraphImage.width,
+        projectConfig.seo.openGraphImage.height,
+      ],
+    ],
+  ]);
+  for (const [ file, [ width, height ] ] of imageSizes) {
+    const output = path.join(docs, "images", file);
+    if (!existsSync(output)) continue;
+    try {
+      const dimensions = file.endsWith(".jpg")
+        ? jpegDimensions(output)
+        : pngDimensions(output);
+      if (dimensions.width !== width || dimensions.height !== height)
+        fail(`${file}: expected dimensions ${width}x${height}`);
+      if (
+        !readFileSync(output).equals(
+          readFileSync(path.join(root, "images", file)),
+        )
+      )
+        fail(`${file}: supplied image bytes changed during assembly`);
+    } catch (error) {
+      fail(`${file}: ${error.message}`);
+    }
   }
-  const homeCss = path.join(docs, 'assets', 'shared.css');
+  for (const file of findHtml(docs)) {
+    const html = readFileSync(file, "utf8");
+    validateIcons(path.relative(docs, file), html);
+  }
+  const homeCss = path.join(docs, "assets", "shared.css");
   if (
     existsSync(homeCss) &&
-    !/Bootstrap\s+v5\.3\.8/.test(readFileSync(homeCss, 'utf8'))
+    !/Bootstrap\s+v5\.3\.8/.test(readFileSync(homeCss, "utf8"))
   )
     fail(
-      'assets/shared.css: Bootstrap 5.3.8 was not included in the site build'
+      "assets/shared.css: Bootstrap 5.3.8 was not included in the site build",
     );
 
-  if (!existsSync(robotsPath)) fail('robots.txt: missing from Pages artifact');
+  if (!existsSync(robotsPath)) fail("robots.txt: missing from Pages artifact");
   else {
-    const robots = readFileSync(robotsPath, 'utf8');
-    if (!robots.includes('User-agent: *') || !robots.includes('Allow: /'))
-      fail('robots.txt: crawler policy is incomplete');
+    const robots = readFileSync(robotsPath, "utf8");
+    if (!robots.includes("User-agent: *") || !robots.includes("Allow: /"))
+      fail("robots.txt: crawler policy is incomplete");
     if (!robots.includes(projectConfig.urls.sitemap))
-      fail('robots.txt: canonical sitemap URL is missing');
+      fail("robots.txt: canonical sitemap URL is missing");
   }
   if (!existsSync(sitemapPath)) {
-    fail('sitemap.xml: missing from Pages artifact');
+    fail("sitemap.xml: missing from Pages artifact");
     return;
   }
-  const sitemap = readFileSync(sitemapPath, 'utf8');
+  const sitemap = readFileSync(sitemapPath, "utf8");
   if (!/^<\?xml[^?]*\?>/.test(sitemap) || !/<urlset\b/.test(sitemap))
-    fail('sitemap.xml: invalid XML envelope');
+    fail("sitemap.xml: invalid XML envelope");
   const locations = matches(sitemap, /<loc>([^<]+)<\/loc>/g).map(
-    (match) => match[1]
+    (match) => match[1],
   );
   for (const url of [
     sitePages.home.url,
@@ -536,9 +600,9 @@ function validateStaticFiles() {
     if (!locations.includes(url)) fail(`sitemap.xml: missing ${url}`);
   }
   if (new Set(locations).size !== locations.length)
-    fail('sitemap.xml: contains duplicate loc entries');
+    fail("sitemap.xml: contains duplicate loc entries");
   for (const url of locations) {
-    if (!url.startsWith('https://')) fail(`sitemap.xml: non-HTTPS URL ${url}`);
+    if (!url.startsWith("https://")) fail(`sitemap.xml: non-HTTPS URL ${url}`);
   }
 }
 
@@ -546,12 +610,12 @@ function validateSite() {
   failures.length = 0;
   const validatedPages = [
     validatePage({
-      label: 'Root page',
-      file: path.join(docs, 'index.html'),
+      label: "Root page",
+      file: path.join(docs, "index.html"),
       canonical: sitePages.home.url,
       requiredLinks: [
-        '#install',
-        '#usage',
+        "#install",
+        "#usage",
         `${projectConfig.site.basePath}api/`,
         `${projectConfig.site.basePath}playground/`,
         `${projectConfig.site.basePath}sitemap.xml`,
@@ -569,8 +633,8 @@ function validateSite() {
       requireNavigationToggle: true,
     }),
     validatePage({
-      label: 'Playground',
-      file: path.join(docs, 'playground', 'index.html'),
+      label: "Playground",
+      file: path.join(docs, "playground", "index.html"),
       canonical: sitePages.playground.url,
       requiredLinks: [
         projectConfig.site.basePath,
@@ -590,8 +654,8 @@ function validateSite() {
       requireNavigationToggle: true,
     }),
     validatePage({
-      label: 'API documentation',
-      file: path.join(docs, 'api', 'index.html'),
+      label: "API documentation",
+      file: path.join(docs, "api", "index.html"),
       canonical: sitePages.api.url,
       requiredLinks: [
         sitePages.home.url,
@@ -601,16 +665,16 @@ function validateSite() {
       ],
       expectedTitle: sitePages.api.title,
       expectedDescription: sitePages.api.description,
-      expectedCss: '../assets/api.css',
-      expectedScripts: ['../assets/api.js'],
+      expectedCss: "../assets/api.css",
+      expectedScripts: [ "../assets/api.js" ],
     }),
   ].filter(Boolean);
   const titles = validatedPages.map((page) => page.title);
   const descriptions = validatedPages.map((page) => page.description);
   if (new Set(titles).size !== titles.length)
-    fail('Primary page titles must be unique');
+    fail("Primary page titles must be unique");
   if (new Set(descriptions).size !== descriptions.length)
-    fail('Primary page descriptions must be unique');
+    fail("Primary page descriptions must be unique");
   const apiTitles = validateApiPages();
   for (const title of titles) {
     if (title !== sitePages.api.title && apiTitles.has(title))
@@ -618,9 +682,9 @@ function validateSite() {
   }
   validateStaticFiles();
   if (failures.length)
-    throw new Error(`SEO validation failed:\n- ${failures.join('\n- ')}`);
+    throw new Error(`SEO validation failed:\n- ${failures.join("\n- ")}`);
   return {
-    apiPages: findHtml(path.join(docs, 'api')).length,
+    apiPages: findHtml(path.join(docs, "api")).length,
     pages: validatedPages.length,
   };
 }
@@ -632,7 +696,7 @@ if (
   try {
     const result = validateSite();
     console.log(
-      `SEO validation passed for ${result.pages} primary pages and ${result.apiPages} API pages.`
+      `SEO validation passed for ${result.pages} primary pages and ${result.apiPages} API pages.`,
     );
   } catch (error) {
     console.error(error.message);
