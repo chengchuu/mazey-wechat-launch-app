@@ -64,10 +64,16 @@ const pages = {
   },
 };
 const assets = {
-  faviconFile: 'logo.svg',
-  faviconType: 'image/svg+xml',
-  logoFile: 'logo.svg',
-  openGraphImageFile: 'open-graph-1200x630.png',
+  faviconFile: 'logo-32x32.png',
+  faviconSize: 32,
+  faviconType: 'image/png',
+  logoFile: 'logo-192x192.png',
+  logoSize: 192,
+  appleTouchIconFile: 'logo-apple-touch-180x180.png',
+  appleTouchIconSize: 180,
+  openGraphImageFile: 'logo-open-graph-1200x630.jpg',
+  icon512File: 'logo-512x512.png',
+  maskableIconFile: 'logo-maskable-512x512.png',
 };
 const software = {
   '@type': 'SoftwareSourceCode',
@@ -97,6 +103,10 @@ module.exports = deepFreeze({
     ...assets,
     faviconUrl: `${basePath}images/${assets.faviconFile}`,
     logoUrl: `${basePath}images/${assets.logoFile}`,
+    appleTouchIconUrl: `${basePath}images/${assets.appleTouchIconFile}`,
+    files: Object.entries(assets)
+      .filter(([key]) => key.endsWith('File'))
+      .map(([, file]) => file),
   },
   site: {
     url: siteUrl.href,
@@ -112,8 +122,8 @@ module.exports = deepFreeze({
       url: new URL(`images/${assets.openGraphImageFile}`, siteUrl).href,
       width: 1200,
       height: 630,
-      type: 'image/png',
-      alt: 'mazey-wechat-launch-app 的微信开放标签与 App 跳转示意图。',
+      type: 'image/jpeg',
+      alt: 'mazey-wechat-launch-app 的绿色对话框与跳转箭头标志。',
     },
     rootJsonLd: {
       '@context': 'https://schema.org',
@@ -145,22 +155,22 @@ module.exports = deepFreeze({
     description: `${displayName} 的项目网站、Playground 和 TypeScript API 文档。`,
     icons: [
       {
-        file: 'icon-192.png',
-        src: `${basePath}images/icon-192.png`,
+        file: assets.logoFile,
+        src: `${basePath}images/${assets.logoFile}`,
         sizes: '192x192',
         type: 'image/png',
         purpose: 'any',
       },
       {
-        file: 'icon-512.png',
-        src: `${basePath}images/icon-512.png`,
+        file: assets.icon512File,
+        src: `${basePath}images/${assets.icon512File}`,
         sizes: '512x512',
         type: 'image/png',
         purpose: 'any',
       },
       {
-        file: 'icon-maskable-512.png',
-        src: `${basePath}images/icon-maskable-512.png`,
+        file: assets.maskableIconFile,
+        src: `${basePath}images/${assets.maskableIconFile}`,
         sizes: '512x512',
         type: 'image/png',
         purpose: 'maskable',

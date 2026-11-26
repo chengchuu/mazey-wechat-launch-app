@@ -1,7 +1,5 @@
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Collapse from 'bootstrap/js/dist/collapse';
-import '../images/logo.svg';
-import '../images/open-graph-1200x630.png';
 
 import './site.css';
 import { initializeNavigation } from './navigation';

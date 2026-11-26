@@ -18,8 +18,8 @@ importers:
         specifier: ^0.6.0
         version: 0.6.0
       mazey:
-        specifier: ^5.9.1
-        version: 5.9.1
+        specifier: ^5.10.1
+        version: 5.10.1
     devDependencies:
       '@babel/core':
         specifier: ^7.29.7
@@ -3127,8 +3127,8 @@ packages:
     resolution: {integrity: sha512-/IXtbwEk5HTPyEwyKX6hGkYXxM9nbj64B+ilVJnC/R6B0pH5G4V3b0pVbL7DBj4tkhBAppbQUlf6F6Xl9LHu1g==}
     engines: {node: '>= 0.4'}
 
-  mazey@5.9.1:
-    resolution: {integrity: sha512-TsEf61YVZJo0JeEUhnvJC5LXtu/Sjfd7Id7zjkUlHAgsj1SwH82ArwbGtnAK4H7sARfn+KsmuCgtDpGC6Y/jaw==}
+  mazey@5.10.1:
+    resolution: {integrity: sha512-/mqazEmAzSXAfCrfjaf2EG3cPKiH5eU9XzI6NUPwx0MCkYu2b3OP7addjTuHk8CaBc1YQ/0tVDkM2DUc79+o6Q==}
 
   mdurl@2.1.0:
     resolution: {integrity: sha512-1+HBaOx0zi/dQWht8rNv9MYf9qqpqL/kxI0hXImU6Y547zM6Sni8BQibt7ifgMcYtQg41ao3Ivd6cnSM86inpg==}
@@ -3519,8 +3519,8 @@ packages:
   react-is@18.3.1:
     resolution: {integrity: sha512-/LLMVyas0ljjAtoYiPqYiL8VWXzUUdThrmU5+n20DZv+a+ClRoevUzw5JxU+Ieh5/c87ytoTBV9G1FiKfNJdmg==}
 
-  react-is@19.2.8:
-    resolution: {integrity: sha512-s5un28nYxKJw5gvUHyW5PCC28CvBqLu9r3cWgzHT4Vo/5fqqkFcdRYsGcKf50WMPpjjFZS5d76fn3YCo2njKwQ==}
+  react-is@19.3.0:
+    resolution: {integrity: sha512-UpMYezM4v5/18F28aC66AEsjXIgE02kyEMH6yLdgLXu/UTfa1Ntwck/nNLrbqJsEXW7gPb0coNO9FQse9WTovA==}
 
   readdirp@5.0.0:
     resolution: {integrity: sha512-9u/XQ1pvrQtYyMpZe7DXKv2p5CNvyVwzUB6uhLAnQwHMSgKMBR62lc7AHljaeteeHXn11XTAaLLUVZYVZyuRBQ==}
@@ -7743,7 +7743,7 @@ snapshots:
 
   math-intrinsics@1.1.0: {}
 
-  mazey@5.9.1: {}
+  mazey@5.10.1: {}
 
   mdurl@2.1.0: {}
 
@@ -8040,7 +8040,7 @@ snapshots:
       '@jest/schemas': 30.4.1
       ansi-styles: 5.2.0
       react-is-18: react-is@18.3.1
-      react-is-19: react-is@19.2.8
+      react-is-19: react-is@19.3.0
 
   proxy-addr@2.0.7:
     dependencies:
@@ -8075,7 +8075,7 @@ snapshots:
 
   react-is@18.3.1: {}
 
-  react-is@19.2.8: {}
+  react-is@19.3.0: {}
 
   readdirp@5.0.0: {}
 

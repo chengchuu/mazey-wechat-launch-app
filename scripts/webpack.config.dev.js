@@ -24,7 +24,10 @@ module.exports = {
   devtool: production ? 'source-map' : 'eval-cheap-module-source-map',
   entry: {
     shared: {
-      import: resolveProject('site/shared.ts'),
+      import: [
+        resolveProject('site/shared.ts'),
+        ...project.assets.files.map((file) => resolveProject('images', file)),
+      ],
     },
     home: {
       import: resolveProject('site/index.ts'),
@@ -67,7 +70,7 @@ module.exports = {
         use: [MiniCssExtractPlugin.loader, 'css-loader'],
       },
       {
-        test: /\.(?:png|svg)$/,
+        test: /\.(?:png|jpe?g)$/i,
         type: 'asset/resource',
         generator: { filename: 'images/[name][ext]' },
       },
